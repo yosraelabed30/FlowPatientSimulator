@@ -19,27 +19,37 @@ public class Doctor extends Resource implements ISchedule{
 	private LinkedList<Patient> filesForContouring; //TODO during the contouring block
 	private LinkedList<Patient> filesForDosi;
 	private Schedule schedule;
+	private boolean overTime;
 
-	public Doctor(Center center, ArrayList<ArrayList<Block>> blocksTab){
+
+	public Doctor(Center center, ArrayList<ArrayList<Block>> blocksTab) {
 		super(center);
 		this.id = doctorClassId++;
 		this.cancerSpecialities = new ArrayList<>();
-		for(int i=0;i<10;i++){
-//			if(Math.random()>0.5){
-//				cancerSpecialities.add(i);
-//			}
+		for (int i = 0; i < 10; i++) {
+			// if(Math.random()>0.5){
+			// cancerSpecialities.add(i);
+			// }
 			cancerSpecialities.add(i);
 		}
 		this.folders = new ArrayList<>();
 		this.filesForContouring = new LinkedList<>();
 		this.filesForDosi = new LinkedList<>();
 		this.schedule = new Schedule(this);
-		for(int i=0;i<7;i++){
+		for (int i = 0; i < 7; i++) {
 			for (Block block : blocksTab.get(i)) {
 				block.setDay(getSchedule().getDefaultWeek().getDay(i));
 			}
 			getSchedule().getDefaultWeek().getDay(i).setBlocks(blocksTab.get(i));
 		}
+		if (Math.random() > 0.5) {
+			this.setOverTime(true);
+
+		}
+		else {
+			this.setOverTime(false);
+		}
+
 	}
 
 	public boolean canTreat(Patient patient) {
@@ -125,6 +135,14 @@ public class Doctor extends Resource implements ISchedule{
 
 	public void setSchedule(Schedule schedule) {
 		this.schedule = schedule;
+	}
+
+	public boolean isOverTime() {
+		return overTime;
+	}
+
+	public void setOverTime(boolean overTime) {
+		this.overTime = overTime;
 	}
 
 }

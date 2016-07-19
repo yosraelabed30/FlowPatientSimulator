@@ -39,7 +39,6 @@ public class AdminAgent extends Resource{
 	}
 
 	public void processDemands() {
-		// TODO Auto-generated method stub
 		this.sortDemands();
 		this.sendDemands(getCenter().getChefSpheres());
 	}

@@ -24,12 +24,14 @@ public class Week implements Comparable<Week>{
 	 * Array of the 7 days of the week
 	 */
 	private Day[] days;
+	private int quotas=3;
 	
 	public Week(int weekId, Day[] days){
 		this(null, weekId, days);
 	}
 	
 	public Week(Schedule schedule, int weekId, Day[] days) {
+		
 		this.schedule=schedule;
 		this.weekId = weekId;
 		this.days = days;
@@ -125,5 +127,20 @@ public class Week implements Comparable<Week>{
 			res = 1;
 		}
 		return res;
+	}
+
+	public int getQuotas() {
+		return quotas;
+	}
+
+	public void setQuotas(int quotas) {
+		this.quotas = quotas;
+	}
+	
+	public void decreaseQuotas(){
+		if(quotas==0){
+			System.out.println("Abnormal attempt to decrease quotas");
+		}
+		this.quotas--;
 	}
 }

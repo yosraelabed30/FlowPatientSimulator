@@ -7,7 +7,6 @@ public enum BlockType {
 	Relance(),
 	Contouring(),
 	Treatment_plan(),
-    Free(),
     Reserved(),
   
     Treatment(),

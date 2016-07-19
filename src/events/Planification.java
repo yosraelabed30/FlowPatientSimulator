@@ -21,7 +21,7 @@ public class Planification extends ActivityEvent{
 		// We assign a file to a technologist
 		int time = Time.time();
 		int min = Time.minIntoTheDay(time);
-		System.out.println("PostConsultation, Consultation and PreConsultation done for patient id : "+this.getPatient().getId()+", at minute : "+min);
+		System.out.println("PostConsultation, Consultation and PreConsultation done for patient id : "+this.getPatient().getId()+" with priority "+patient.getPriority()+", at minute : "+min);
 		patient.getCenter().getTechnologist().getFilesForCTSimTreatment().add(this.getPatient());
 	}
 

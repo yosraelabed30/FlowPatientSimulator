@@ -18,7 +18,7 @@ public class Arrival extends ActivityEvent{
 		int time = Time.time();
 		int min = Time.minIntoTheDay(time);
 		Patient patient = (Patient) this.getSchedule().getResource();
-		System.out.println("Patient id : "+patient.getId()+" arrived, at min : "+min);
+		System.out.println("Patient id : "+patient.getId()+ " with priority "+patient.getPriority()+" arrived, at min : "+min);
 		if(patient.getSteps().size()!=0){
 			System.out.println("Arrival for more than consultation !");
 		}

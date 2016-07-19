@@ -75,8 +75,12 @@ public class FlowOfPatients {
 		for(int i=0;i<7;i++){
 			ArrayList<Block> blocks1 = new ArrayList<>();
 			ArrayList<Block> blocks2 = new ArrayList<>();
-			blocks1.add(new Block(0, 8*60, 17*60, BlockType.Consultation));
-			blocks2.add(new Block(0, 8*60, 17*60, BlockType.Consultation));
+			blocks1.add(new Block(0, 0, 8*60, BlockType.NotWorking));
+			blocks1.add(new Block(1, 8*60, 17*60, BlockType.Consultation));
+			blocks1.add(new Block(2, 17*60+1, 24*60-1, BlockType.NotWorking));
+			blocks2.add(new Block(0, 0, 8*60, BlockType.NotWorking));
+			blocks2.add(new Block(1, 8*60, 17*60, BlockType.Consultation));
+			blocks2.add(new Block(2, 17*60+1, 24*60-1, BlockType.NotWorking));
 			blocksTab1.add(blocks1);
 			blocksTab2.add(blocks2);
 		}
@@ -124,8 +128,8 @@ public class FlowOfPatients {
 //		test.simulateOneRun(525600);
 //		test.simulateOneRun(288000);
 //		test.simulateOneRun(100000);
-		test.simulateOneRun(30000);
-//		test.simulateOneRun(72*60);
+//		test.simulateOneRun(30000);
+		test.simulateOneRun(72*60);
 		
 		time = System.currentTimeMillis()-time;
 		System.out.println("time : "+time);

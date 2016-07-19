@@ -74,7 +74,7 @@ public class Technologist extends Resource implements ISchedule{
 	
 	
 	private Activity planificationCtSim(Patient patient, Activity firstTreatment) {
-		
+		// TODO 
 		Date dateUpperBound = firstTreatment.getDate();
 		Date dateCTSim =null;
 		boolean planned=false;
@@ -182,17 +182,15 @@ public class Technologist extends Resource implements ISchedule{
 				Activity tmp = null;
 				adequateMachine.add(treatmentMachine);
 				if (patient.getPriority()== Priority.P1 || patient.getPriority()== Priority.P2){
-					ArrayList <BlockType> blockTypes =new ArrayList<>();
-					blockTypes.add(BlockType.Treatment);
-					blockTypes.add(BlockType.Reserved);
-					//tmp = treatmentMachine.getSchedule().getFirstAvailabilityNotFriday(duration, blockTypes, weekLowerBound, dayLowerBound, minuteLowerBound);
 					tmp = treatmentMachine.getSchedule().getFirstAvailabilityNotWeekend(duration, BlockType.Treatment, weekLowerBound, dayLowerBound, minuteLowerBound);
 				}
 				else{
 					tmp = treatmentMachine.getSchedule().getFirstAvailabilityNotWeekend(duration, BlockType.Treatment, weekLowerBound, dayLowerBound, minuteLowerBound);	
 				}
 				if (best == null ||tmp.startsEarlierThan(best) ) {
-					best = tmp;	
+					best= tmp;	
+					
+					
 				}
 			
 
@@ -229,10 +227,7 @@ public class Technologist extends Resource implements ISchedule{
 			Activity firstTreatment = new Activity(start,duration,type,event);
 			best.insert(firstTreatment);
 			Date date = firstTreatment.getDate();
-			
-			if(patient.getPriority() == Priority.P1 || patient.getPriority() == Priority.P2){
-				System.out.println("le premier traitement schedulé : "+date+ " la priorité est : " +patient.getPriority());
-			}
+
 			boolean scheduled = false;
 			if (patient.getPriority()==Priority.P3 || patient.getPriority()==Priority.P4){
 				for (int i=1; i<patient.getNbTreatments();i++){
@@ -257,7 +252,8 @@ public class Technologist extends Resource implements ISchedule{
 			}
 		}
 		else{
-			best = null;
+	      System.out.println("file cannot be processed in treatment planfication's stage");
+			
 		}
 		
 		return best;

@@ -24,7 +24,7 @@ public class CheckAndPreConsultation extends ActivityEvent{
 		 */
 		int time = Time.time();
 		int min = Time.minIntoTheDay(time);
-		System.out.println("checking if patient id : "+getPatient().getId()+" is present : "+getPatient().isPresent()+", at min : "+min);
+		System.out.println("checking if patient id : "+getPatient().getId()+" with priority "+getPatient().getPriority()+" is present : "+getPatient().isPresent()+", at min : "+min);
 		/*
 		 * check if the patient is here
 		 * if not check again in 15 min

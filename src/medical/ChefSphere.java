@@ -7,6 +7,7 @@ import java.util.LinkedList;
 import scheduling.Activity;
 import scheduling.ActivityType;
 import scheduling.BlockType;
+import scheduling.Date;
 import tools.Time;
 import events.Arrival;
 import events.CheckAndPreConsultation;
@@ -25,37 +26,67 @@ public class ChefSphere extends Resource{
 		this.specialities = specialities;
 		this.demands = new LinkedList<>();
 	}
-	
-//	public void processUrgentDemands(Patient patient) {
-//		// TODO implements missing methods
-//		boolean noOncologistAvailableUnder24Hours = true;
-//		Doctor firstAvailable = new Doctor();
-//		int delay = Integer.MAX_VALUE;
-//		int time = Time.time();
-//		int day = Time.dayCorrespondingToTime(time);
-//		int week = Time.weekCorrespondingToTime(time);
-//		ArrayList<Doctor> competentDoctors = new ArrayList<>();
-//		
-//		for (Doctor oncologist : doctors) {
-//			if(oncologist.hasSkillsToTreat(patient)){
-//				competentDoctors.add(oncologist);
-//				if(oncologist.availableBeforeForUrgentConsultation(week, day, delay)){
-//					noOncologistAvailableUnder24Hours = false;
-//					//availableBeforeForUrgentConsultation check if the quotas are reached, and if it is under 24hours 
-//					//30 min consultation //a consultation is 60 min, 30 min with doc and 30 with a nurse (post-consultation)
-//					firstAvailable = oncologist;
-//				}
-//			}
-//		}
-//		if(noOncologistAvailableUnder24Hours){
-//			if(!competentDoctors.isEmpty()){ // we suppose there is always a competent doctor for the patient
-//				Collections.shuffle(competentDoctors);
-//				firstAvailable = competentDoctors.get(0);
-//			}
-//		}
-//		firstAvailable.insertEmergencyConsultation(patient);
-//	}
 
+
+	public void processUrgentDemands(Patient patient){
+		int duration =45;
+		Date dateLowerBound= Date.dateNow();
+		Activity best= null; 
+		ArrayList<Doctor> competentDoctors = new ArrayList<>();
+		for (Doctor doctor : doctors) {
+			Activity tmp = null;
+			if (doctor.hasSkillsToTreat(patient)){
+				competentDoctors.add(doctor);
+				tmp=doctor.getSchedule().getFirstAvailabilityFridayQuotas(duration, BlockType.Consultation,dateLowerBound);
+		    }
+			if (best == null ||tmp.startsEarlierThan(best) ) {
+				best = tmp;
+			}
+					
+		}
+		if (best==null || !(best.getDate().compareTo(patient.getDeadLine())==-1)){
+			for (Doctor doctor : competentDoctors) {
+				Activity tmp = null;
+				if (doctor.isOverTime()== true){
+					tmp= doctor.getSchedule().getFirstAvailabilityFridayQuotas(duration, BlockType.NotWorking, dateLowerBound);
+					if (best == null ||tmp.startsEarlierThan(best) ) {
+						best = tmp;	
+					}
+				}
+			}
+			
+		}
+	
+		if(best!=null){
+			Doctor firstAvailable = (Doctor) best.getResource();
+			patient.setDoctor(firstAvailable);
+			int weekId = best.getWeek().getWeekId();
+			int dayId = best.getDay().getDayId();
+			int start = (weekId==dateLowerBound.getWeekId() && dayId==dateLowerBound.getDayId())? Math.max(dateLowerBound.getMinute(), best.getStart()) : best.getStart();
+			int end = start+duration;
+			
+			CheckAndPreConsultation check = new CheckAndPreConsultation(patient, false, getCenter().getAdminAgent());
+			Activity consultationForDoctor = new Activity(best.getBlock(), start, end, ActivityType.Consultation, check);
+			best.insert(consultationForDoctor);
+			
+			//Quotas of the week for the doc are decreased
+			best.getWeek().decreaseQuotas();
+			
+			Activity consultationForPatient = consultationForDoctor.clone(); //at that moment, consultationForPatient's block is the one of consultationForDoctor
+			Arrival arrival =  new Arrival();
+			arrival.setPriority(0); //patient arrives first then the presence is checked
+			consultationForPatient.setActivityEvent(arrival);
+			
+			Activity free = patient.getSchedule().findFreeActivityToInsertOtherActivity(weekId, dayId, start, end);
+
+			free.insert(consultationForPatient); //and when inserted, consultationForPatient's block is the one of free
+		}
+		else{
+			System.out.println("A consultation could not be found for a patient : "+patient.getId()+", "+patient.getPriority());
+		}
+
+	}
+	
 	public boolean sphereCorrespondsTo(int cancer) {
 		return specialities.contains(cancer);
 	}
@@ -64,55 +95,16 @@ public class ChefSphere extends Resource{
 		this.demands.add(patient);
 	}
 
+	
+	/**
+	 * A consultation can always be found for a patient
+	 */
 	public void processDemands(){
-		int time = Time.time();
-		int weekNow = Time.weekCorrespondingToTime(time);
-		int dayNow = Time.weekDayCorrespondingToTime(time);
-		
-		int consultationDuration = Consultation.durationForScheduling();
-		Activity earliest = null;
-		Activity act = null;
 		Iterator<Patient> demandsIter = demands.iterator();
 		while (demandsIter.hasNext()) {
 			Patient patient = demandsIter.next();
-			ArrayList<Doctor> competentDoctors = new ArrayList<>();
-			for (Doctor oncologist : doctors) {
-				if(oncologist.hasSkillsToTreat(patient)){
-					competentDoctors.add(oncologist);
-					act = oncologist.getSchedule().getFirstAvailability(consultationDuration, BlockType.Consultation);
-					if(earliest==null || act.startsEarlierThan(earliest)){
-						//availableBeforeForConsultation check if the quotas are reached
-						//30 min consultation //a consultation is 60 min, 30 min with doc and 30 with a nurse (post-consultation)
-						earliest = act;
-					}
-				}
-			}
-			
-			if(earliest!=null){
-				Doctor firstAvailable = (Doctor) earliest.getResource();
-				patient.setDoctor(firstAvailable);
-				int weekId = earliest.getWeek().getWeekId();
-				int dayId = earliest.getDay().getDayId();
-				int start = (weekId==weekNow && dayId==dayNow)? Math.max(time, earliest.getStart()) : earliest.getStart();
-				int end = start+consultationDuration;
-				
-				CheckAndPreConsultation check = new CheckAndPreConsultation(patient, false, getCenter().getAdminAgent());
-				Activity consultationForDoctor = new Activity(earliest.getBlock(), start, end, ActivityType.Consultation, check);
-				earliest.insert(consultationForDoctor);
-				
-				Activity consultationForPatient = consultationForDoctor.clone(); //at that moment, consultationForPatient's block is the one of consultationForDoctor
-				Arrival arrival =  new Arrival();
-				arrival.setPriority(0); //patient arrives first then the presence is checked
-				consultationForPatient.setActivityEvent(arrival);
-				
-				Activity free = patient.getSchedule().findFreeActivityToInsertOtherActivity(weekId, dayId, start, end);
-
-				free.insert(consultationForPatient); //and when inserted, consultationForPatient's block is the one of free
-				demandsIter.remove();
-			}
-			else{
-				System.out.println("couldn't find a doctor");
-			}
+			this.processUrgentDemands(patient);
+			demandsIter.remove();
 		}
 	}
 }

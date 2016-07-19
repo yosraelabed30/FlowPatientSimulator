@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedList;
 
+import events.ActivityEvent;
 import medical.Center;
 import medical.Resource;
 import tools.Time;
@@ -96,7 +97,7 @@ public class Schedule {
 		int delay = Integer.MAX_VALUE;
 		searchNext: for (Block block : blocks) {
 			for (Activity activity : block.getActivities()) {
-				if (activity.getStatus() == ActivityStatus.NotDone) {
+				if (activity.getStatus() == ActivityStatus.NotDone && activity.getActivityEvent().time()==-10) {
 					delay = Math.max(0, activity.getStart() - min);
 					activity.getActivityEvent().schedule(delay);
 					break searchNext;
@@ -675,6 +676,52 @@ public class Schedule {
 		}
 
 		return activity;
+	}
+
+	public Activity getFirstAvailabilityFridayQuotas(int duration, BlockType blockType, Date dateLowerBound) {
+		boolean found = false;
+		int weekLowerBound = dateLowerBound.getWeekId();
+		int dayLowerBound = dateLowerBound.getDayId();
+		int minuteLowerBound = dateLowerBound.getMinute();
+
+		while (!found) {
+			Week w = null;
+			try {
+				w = this.getWeeks().get(weekLowerBound);
+			} catch (Exception e) {
+				w = this.addWeek(weekLowerBound);
+			}
+			
+			if (w.getQuotas() > 0) {
+
+				Day d = w.getDays()[dayLowerBound];
+				for (Block b : d.getBlocks()) {
+					if (b.getType() == blockType) {
+						for (Activity a : b.getActivities()) {
+							if (a.getType() == ActivityType.Free
+									&& a.getEnd() - Math.max(a.getStart(), minuteLowerBound) > duration
+									&& a.getDay().getDayId() != 5 && a.getDay().getDayId() != 6) {
+								return a;
+							}
+						}
+					}
+				}
+
+				minuteLowerBound = 0;
+				if (dayLowerBound == 6) {
+					dayLowerBound = 0;
+					weekLowerBound++;
+				} else {
+					dayLowerBound++;
+				}
+			}
+			else{
+				dayLowerBound = 0;
+				weekLowerBound++;
+			}
+		}
+	
+		return null;
 	}
 
 }

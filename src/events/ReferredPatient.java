@@ -3,6 +3,7 @@ package events;
 import medical.Center;
 import medical.ChefSphere;
 import medical.Patient;
+import medical.Priority;
 import umontreal.iro.lecuyer.randvar.RandomVariateGen;
 
 public class ReferredPatient extends ActivityEvent{
@@ -24,15 +25,20 @@ public class ReferredPatient extends ActivityEvent{
 		}
 		Patient patient = new Patient(center);
 		center.getPatients().add(patient);
-		if(patient.isEmergency()){
+		System.out.println("Referred patient id : "+patient.getId()+" with prio : "+patient.getPriority()+", date : "+patient.getReferredDate());
+		if(patient.getPriority() == Priority.P1 || patient.getPriority() == Priority.P2  ){
 			for (ChefSphere chef : center.getChefSpheres()) {
 				/*
 				 * we suppose, for now, that there is only one sphere corresponding to the patient's cancer
 				 */
 				if(chef.sphereCorrespondsTo(patient.getCancer())){
-					//TODO resume the implementation : chef.processUrgentDemands(patient);
+					chef.processUrgentDemands(patient);
+					break;
 				}
 			}
+			patient.getSchedule().doNextTask();
+			// the doc should check his schedule
+			patient.getDoctor().getSchedule().doNextTask();
 		}
 		else{
 			/*
