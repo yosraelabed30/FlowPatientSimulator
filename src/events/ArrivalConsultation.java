@@ -1,11 +1,14 @@
 package events;
 
+import java.util.ArrayList;
+
+import medical.ChefSphere;
 import medical.Patient;
 import tools.Time;
 
-public class Arrival extends ActivityEvent{
+public class ArrivalConsultation extends ActivityEvent{
 	
-	public Arrival() {
+	public ArrivalConsultation() {
 		super();
 	}
 
@@ -17,17 +20,23 @@ public class Arrival extends ActivityEvent{
 		 */
 		int time = Time.time();
 		int min = Time.minIntoTheDay(time);
-		Patient patient = (Patient) this.getSchedule().getResource();
+		Patient patient = (Patient) this.getSchedule().getiSchedule();
 		System.out.println("Patient id : "+patient.getId()+ " with priority "+patient.getPriority()+" arrived, at min : "+min);
 		if(patient.getSteps().size()!=0){
 			System.out.println("Arrival for more than consultation !");
 		}
+		
+		if (this.getLateness()>0 && this.getLateness()!= Integer.MAX_VALUE){
+			patient.getSphere().getChefSphere().delayConsultation(patient);
+			
+		}
+
 		patient.setPresent(true);
 	}
 
 	@Override
 	public ActivityEvent clone() {
-		return new Arrival();
+		return new ArrivalConsultation();
 	}
 
 	@Override

@@ -7,8 +7,8 @@ import java.util.LinkedList;
 import medical.Center;
 import medical.Resource;
 import events.ActivityEvent;
-import events.Arrival;
-import events.CheckAndPreConsultation;
+import events.ArrivalConsultation;
+import events.PreConsultation;
 import events.Idle;
 import umontreal.iro.lecuyer.simevents.Event;
 import umontreal.iro.lecuyer.simevents.Sim;
@@ -273,18 +273,10 @@ public class Activity implements Comparable<Activity> {
 		return res;
 	}
 
-	public Resource getResource() {
-		Resource res = null;
+	public ISchedule getiSchedule() {
+		ISchedule res = null;
 		if(this.getSchedule()!=null){
-			res = this.getSchedule().getResource();
-		}
-		return res;
-	}
-	
-	public Center getCenter(){
-		Center res = null;
-		if(this.getResource()!=null){
-			res = this.getResource().getCenter();
+			res = this.getSchedule().getiSchedule();
 		}
 		return res;
 	}

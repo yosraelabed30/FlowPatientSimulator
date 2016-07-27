@@ -6,6 +6,7 @@ import scheduling.Activity;
 import scheduling.ActivityStatus;
 import scheduling.Block;
 import scheduling.Day;
+import scheduling.ISchedule;
 import scheduling.Schedule;
 import scheduling.Week;
 import umontreal.iro.lecuyer.simevents.Event;
@@ -21,8 +22,10 @@ public abstract class ActivityEvent extends Event{
 	 * Is used with the .schedule(int delay) 
 	 */
 	protected int delay;
+	private int lateness;
 	
 	public ActivityEvent(){
+		this.setLateness(0);
 		this.activity=null;
 		this.setDelay(-1);
 	}
@@ -62,19 +65,11 @@ public abstract class ActivityEvent extends Event{
 	public void setDelay(int delay) {
 		this.delay = delay;
 	}
-	
-	public Center getCenter(){
-		Center res = null;
-		if(this.getResource()!=null){
-			res = this.getResource().getCenter();
-		}
-		return res;
-	}
-	
-	public Resource getResource() {
-		Resource res = null;
+
+	public ISchedule getiSchedule() {
+		ISchedule res = null;
 		if(this.getSchedule()!=null){
-			res = this.getSchedule().getResource();
+			res = this.getSchedule().getiSchedule();
 		}
 		return res;
 	}
@@ -109,5 +104,13 @@ public abstract class ActivityEvent extends Event{
 			res = this.getActivity().getBlock();
 		}
 		return res;
+	}
+
+	public int getLateness() {
+		return lateness;
+	}
+
+	public void setLateness(int lateness) {
+		this.lateness = lateness;
 	}
 }

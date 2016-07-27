@@ -11,27 +11,24 @@ import scheduling.Schedule;
 import scheduling.Week;
 import fileComparators.FileComparator1;
 
-public class Doctor extends Resource implements ISchedule{
+public class Doctor  implements ISchedule{
 	static private int doctorClassId=0;
 	private int id;
-	private ArrayList<Integer> cancerSpecialities;
+	private ArrayList<Sphere> spheres;
 	private ArrayList<Patient> folders;
 	private LinkedList<Patient> filesForContouring; //TODO during the contouring block
 	private LinkedList<Patient> filesForDosi;
 	private Schedule schedule;
 	private boolean overTime;
+	private Center center;
+	
 
 
-	public Doctor(Center center, ArrayList<ArrayList<Block>> blocksTab) {
-		super(center);
+	public Doctor(ArrayList<ArrayList<Block>> blocksTab, ArrayList<Sphere> spheres, Center center ) {
+
+		this.setCenter(center);
 		this.id = doctorClassId++;
-		this.cancerSpecialities = new ArrayList<>();
-		for (int i = 0; i < 10; i++) {
-			// if(Math.random()>0.5){
-			// cancerSpecialities.add(i);
-			// }
-			cancerSpecialities.add(i);
-		}
+		this.spheres=spheres;
 		this.folders = new ArrayList<>();
 		this.filesForContouring = new LinkedList<>();
 		this.filesForDosi = new LinkedList<>();
@@ -53,7 +50,13 @@ public class Doctor extends Resource implements ISchedule{
 	}
 
 	public boolean canTreat(Patient patient) {
-		return cancerSpecialities.contains(patient.getCancer());
+		for (Sphere sphere : spheres) {
+			if (sphere.getCancer()==patient.getCancer()){
+				return true;
+			}
+			
+		}
+		return false;
 	}
 
 	public int getId() {
@@ -72,9 +75,6 @@ public class Doctor extends Resource implements ISchedule{
 		this.folders = folders;
 	}
 
-	public boolean hasSkillsToTreat(Patient patient) {
-		return cancerSpecialities.contains(patient.getCancer());
-	}
 
 	public boolean isRadiotherapyNeeded(Patient patient) {
 		// TODO 
@@ -143,6 +143,22 @@ public class Doctor extends Resource implements ISchedule{
 
 	public void setOverTime(boolean overTime) {
 		this.overTime = overTime;
+	}
+
+	public ArrayList<Sphere> getSpheres() {
+		return spheres;
+	}
+
+	public void setSpheres(ArrayList<Sphere> spheres) {
+		this.spheres = spheres;
+	}
+
+	public Center getCenter() {
+		return center;
+	}
+
+	public void setCenter(Center center) {
+		this.center = center;
 	}
 
 }

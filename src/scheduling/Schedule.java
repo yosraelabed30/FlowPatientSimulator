@@ -30,7 +30,7 @@ public class Schedule {
 	/**
 	 * Resource to which this schedule is linked
 	 */
-	private Resource resource;
+	private ISchedule iSchedule;
 	/**
 	 * list of weeks
 	 */
@@ -40,10 +40,10 @@ public class Schedule {
 	 */
 	protected Week defaultWeek;
 
-	public Schedule(Resource resource) {
+	public Schedule(ISchedule iSchedule) {
 		super();
 		this.scheduleId = staticScheduleId++;
-		this.resource = resource;
+		this.setiSchedule(iSchedule);
 		this.weeks = new ArrayList<>();
 		this.defaultWeek = new Week(this, -1);
 	}
@@ -98,9 +98,14 @@ public class Schedule {
 		searchNext: for (Block block : blocks) {
 			for (Activity activity : block.getActivities()) {
 				if (activity.getStatus() == ActivityStatus.NotDone && activity.getActivityEvent().time()==-10) {
-					delay = Math.max(0, activity.getStart() - min);
-					activity.getActivityEvent().schedule(delay);
-					break searchNext;
+					if(activity.getActivityEvent().getLateness()!=Integer.MAX_VALUE){
+						delay = Math.max(0, activity.getStart() - min)+activity.getActivityEvent().getLateness();
+						activity.getActivityEvent().schedule(delay);
+						break searchNext;
+					}
+					else{
+						activity.setStatus(ActivityStatus.ToPostpone);
+					}
 				}
 			}
 		}
@@ -255,22 +260,6 @@ public class Schedule {
 
 	public int getLastWeekId() {
 		return this.getWeeks().get(this.getWeeks().size() - 1).getWeekId();
-	}
-
-	public Resource getResource() {
-		return resource;
-	}
-
-	public void setResource(Resource resource) {
-		this.resource = resource;
-	}
-
-	public Center getCenter() {
-		Center res = null;
-		if (this.getResource() != null) {
-			res = this.getResource().getCenter();
-		}
-		return res;
 	}
 
 	public Activity getFirstAvailabilityNotWeekend(int duration, BlockType blockType, int weekLowerBound,
@@ -514,7 +503,7 @@ public class Schedule {
 							if (a.getType() == ActivityType.Free
 									&& a.getEnd() - Math.max(a.getStart(), minuteLowerBound) > duration
 									&& a.getDay().getDayId() != 5 && a.getDay().getDayId() != 6) {
-								activity = a;
+								return activity = a;
 
 							}
 						}
@@ -556,7 +545,7 @@ public class Schedule {
 						if (a.getType() == ActivityType.Free
 								&& a.getEnd() - Math.max(a.getStart(), minuteLowerBound) > duration
 								&& a.getDay().getDayId() != 5 && a.getDay().getDayId() != 6) {
-							activity = a;
+							return activity = a;
 
 						}
 					}
@@ -621,7 +610,7 @@ public class Schedule {
 							if (a.getType() == ActivityType.Free
 									&& a.getEnd() - Math.max(a.getStart(), date.getMinute()) > duration
 									&& a.getDay().getDayId() != 5 && a.getDay().getDayId() != 6) {
-								activity = a;
+								return activity = a;
 
 							}
 						}
@@ -661,7 +650,7 @@ public class Schedule {
 							if (a.getType() == ActivityType.Free
 									&& a.getEnd() - Math.max(a.getStart(), date.getMinute()) > duration
 									&& a.getDay().getDayId() != 5 && a.getDay().getDayId() != 6) {
-								activity = a;
+								return activity = a;
 
 							}
 						}
@@ -722,6 +711,62 @@ public class Schedule {
 		}
 	
 		return null;
+	}
+
+	public Activity getFirstAvailabilityBeforeTheEndOfTheDay(int duration, BlockType treatment, int arrivalMinutes) {
+
+		Date date = Date.toDates(arrivalMinutes);
+		Day day = this.getDay(date.getWeekId(), date.getDayId());
+		Activity activity = null;
+
+		for (Block block : day.getBlocks()) {
+			if (block.getType() == BlockType.Treatment && block.getEnd() >= arrivalMinutes
+					&& block.getEnd() <= 18 * 60) {
+				for (Activity a : block.getActivities()) {
+					if (a.getType() == ActivityType.Free
+							&& a.getEnd() - Math.max(a.getStart(), date.getMinute()) > duration) {
+						return activity = a;
+
+					}
+
+				}
+			}
+
+		}
+
+		return activity;
+	}
+
+	public Activity getFirstAvailabilityFridayQuotasBeforeTheEndOfTheDay(int duration, BlockType consultation,
+			Date date) {
+		int weekId = date.getWeekId();
+		int dayId = date.getDayId();
+		int minute= date.getMinute();
+		Day day= this.getDay(weekId, dayId);
+
+		for (Block block : day.getBlocks()) {
+			if (block.getType() == BlockType.Consultation && block.getEnd() >= minute
+					&& block.getEnd() <= 18 * 60) {
+				for (Activity a : block.getActivities()) {
+					if (a.getType() == ActivityType.Free
+									&& a.getEnd() - Math.max(a.getStart(), minute) > duration ) {
+								return a;
+					}
+				}
+			}
+		}
+
+
+		
+		return null;
+	}
+
+	public ISchedule getiSchedule() {
+		return iSchedule;
+	}
+
+	public void setiSchedule(ISchedule iSchedule) {
+		this.iSchedule = iSchedule;
 	}
 
 }

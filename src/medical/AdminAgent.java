@@ -29,7 +29,7 @@ public class AdminAgent extends Resource{
 		Patient demand = demands.pollFirst();
 		while(demand!=null){
 			for (ChefSphere chef : chefSpheres) {
-				if(chef.sphereCorrespondsTo(demand.getCancer())){
+				if(chef.getSphere().getCancer()==demand.getCancer()){
 					chef.addToDemands(demand);
 					break;
 				}

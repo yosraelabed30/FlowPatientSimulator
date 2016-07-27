@@ -183,20 +183,16 @@ public class Day implements Comparable<Day>{
 		return res;
 	}
 	
-	public Resource getResource() {
-		Resource res = null;
+	public ISchedule getiSchedule() {
+		ISchedule res = null;
 		if(this.getSchedule()!=null){
-			res = this.getSchedule().getResource();
+			res = this.getSchedule().getiSchedule();
 		}
 		return res;
 	}
 
-	public Center getCenter(){
-		Center res = null;
-		if(this.getResource()!=null){
-			res = this.getResource().getCenter();
-		}
-		return res;
-	}
+
+
+
 	
 }

@@ -18,7 +18,7 @@ import simulation.FlowOfPatients;
 import tools.Time;
 import umontreal.iro.lecuyer.stochprocess.GeometricBrownianMotion;
 import events.ActivityEvent;
-import events.Arrival;
+import events.ArrivalConsultation;
 import events.CTSim;
 import events.FirstTreatment;
 import events.Treatment;
@@ -119,7 +119,7 @@ public class Technologist extends Resource implements ISchedule{
 
 
 		if (best!=null){
-			Scan scan = (Scan) best.getResource();
+			Scan scan = (Scan) best.getiSchedule();
 			int start = (best.getWeek().getWeekId() == weekLowerBound && best.getDay().getDayId() == dayLowerBound) ? Math.max(minuteLowerBound, best.getStart()) : best.getStart();
 			
 			ActivityType type= ActivityType.CTSim;
@@ -131,7 +131,7 @@ public class Technologist extends Resource implements ISchedule{
 		else {
 			Activity tmpFirstTreatment = planificationTreatment(patient,dateUpperBound);
 			if((tmpFirstTreatment.getDate()).compareTo(patient.getDeadLine())==-1){
-				TreatmentMachine treatmentMachine= (TreatmentMachine) firstTreatment.getResource() ;
+				TreatmentMachine treatmentMachine= (TreatmentMachine) firstTreatment.getiSchedule() ;
 				treatmentMachine.getSchedule().deleteFirstTreatmentAssociated(dateUpperBound);
 				best = planificationCtSim( patient,tmpFirstTreatment);	
 
@@ -139,7 +139,7 @@ public class Technologist extends Resource implements ISchedule{
 			
 			else{
 				// si tu arrives là alors il faut annuler le premier traitement planifié tmpFirstTreatment
-				TreatmentMachine treatmentMachine= (TreatmentMachine) tmpFirstTreatment.getResource() ;
+				TreatmentMachine treatmentMachine= (TreatmentMachine) tmpFirstTreatment.getiSchedule() ;
 				treatmentMachine.getSchedule().deleteFirstTreatmentAssociated(tmpFirstTreatment.getDate());
 				for (Scan scan : this.getCenter().getScans()) {
 					if (scanTechnicCopy.contains(scan.getImageryTechnic())){
@@ -219,7 +219,7 @@ public class Technologist extends Resource implements ISchedule{
 	 	}
 		
 		if(best!=null){
-			TreatmentMachine machine = (TreatmentMachine) best.getResource();
+			TreatmentMachine machine = (TreatmentMachine) best.getiSchedule();
 			int start = (best.getWeek().getWeekId() == weekLowerBound && best.getDay().getDayId() == dayLowerBound) ? Math.max(minuteLowerBound, best.getStart()) : best.getStart();
 			
 			ActivityType type= ActivityType.FirstTreatment;
@@ -363,6 +363,80 @@ public class Technologist extends Resource implements ISchedule{
 		this.level = level;
 	}
 	
+	public Activity DelayTreatment(Patient patient) {
+		Activity best = null;
+		Activity tmp = null;
+		int arrivalMinutes;
+		int duration = 45;
+		ArrayList<TreatmentMachine> adequateMachine = new ArrayList<>();
+
+		arrivalMinutes = patient.getArrivalMinutes();
+
+		for (TreatmentMachine treatmentMachine : this.getCenter().getTreatmentMachines()) {
+			if (treatmentMachine.getTreatmentTechnic() == patient.getTreatmentTechnic()) {
+				adequateMachine.add(treatmentMachine);
+				tmp = treatmentMachine.getSchedule().getFirstAvailabilityBeforeTheEndOfTheDay(duration,
+						BlockType.Treatment, arrivalMinutes);
+			}
+			if (best == null || tmp.startsEarlierThan(best)) {
+				best = tmp;
+			}
+		}
+		if (best == null) {
+			for (TreatmentMachine treatmentMachine : adequateMachine) {
+				tmp = findOvertimeFreeActivity(treatmentMachine, Date.dateNow(), duration);
+			}
+			if (best == null || tmp.startsEarlierThan(best)) {
+				best = tmp;
+			}
+
+		}
+		if (best != null) {
+			TreatmentMachine machine = (TreatmentMachine) best.getiSchedule();
+			int start = best.getStart();
+			ActivityType type = ActivityType.Treatment;
+			ActivityEvent event = new Treatment(patient);
+			Activity Treatment = new Activity(start, duration, type, event);
+			best.insert(Treatment);
+
+		}
+		return best;
+	}
+		
+	public Activity NoShowsTreatment(Patient patient){
+		
+		int duration =45;
+		boolean scheduled = false;
+		boolean planned = false;
+		ArrayList<TreatmentMachine> adequateMachine = new ArrayList<>();
+		Activity best = patient.getLastPlannedStep();
+		Date date = best.getDate().increase();
+		TreatmentMachine machine = (TreatmentMachine) best.getiSchedule();
+		for (TreatmentMachine treatmentMachine : this.getCenter().getTreatmentMachines()) {
+			if (treatmentMachine.getTreatmentTechnic() == patient.getTreatmentTechnic()) {
+				adequateMachine.add(treatmentMachine);
+			}
+		}
+		scheduled = this.scheduleTreatment(patient, machine, date, duration, adequateMachine);
+		planned = planned && scheduled;
+		if (!scheduled) {
+			System.out.println("A treatment could not be scheduled");
+
+		
+
+	}
+
+	return best;
+	}
+			
+		
+	
+			
+	
+		
+	
+	
+	
 	public Activity findOvertimeFreeActivity(TreatmentMachine treatmentMachine, Date date, int duration){
 		Activity freeAct = null;
 		Day day = treatmentMachine.getSchedule().getDay(date.getWeekId(), date.getDayId());
@@ -420,4 +494,6 @@ public class Technologist extends Resource implements ISchedule{
 		freeAct.insert(treatment);
 		return true;
 	}
+
 }
+

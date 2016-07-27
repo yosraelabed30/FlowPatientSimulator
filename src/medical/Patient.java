@@ -1,6 +1,7 @@
 package medical;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 
 import javax.swing.event.SwingPropertyChangeSupport;
 
@@ -19,7 +20,7 @@ import umontreal.iro.lecuyer.simevents.Sim;
  * @author Joffrey
  * Represents a patient in the system
  */
-public class Patient extends Resource implements ISchedule{
+public class Patient  implements ISchedule{
 	/**
 	 * static variable to keep track of the patients ids
 	 * at first patientClassId is equal to 0
@@ -35,7 +36,7 @@ public class Patient extends Resource implements ISchedule{
 	/**
 	 * int identifying the patient's cancer
 	 */
-	private int cancer;
+	private Cancer cancer;
 	/**
 	 * True if the patient is curative, False if palliative
 	 */
@@ -90,10 +91,16 @@ public class Patient extends Resource implements ISchedule{
 	
 	private int nbTreatments;
 	
-	
+	private boolean inCenter;
 	private Schedule schedule;
 	private ArrayList<Activity> steps;
+	private ArrayList <Activity> plannedSteps;
+	
+	
 	private Date referredDate;
+	private Sphere sphere;
+	private Center center;
+	
 	
 
 
@@ -104,14 +111,15 @@ public class Patient extends Resource implements ISchedule{
 	private int centerId;
 
 	public Patient(Center center){
-		super(center);
+		
 		this.id = staticPatientId++;
-		this.cancer = (int) (Math.random()*10);
+		this.cancer= Cancer.generateCancer();
+		
 		this.curative = Math.random()>0.5 ? true : false;
 		this.arrivalDay = -10;
 		this.arrivalMinutes =-10;
 		this.steps = new ArrayList<>();
-		
+	
 		this.doctor = null;
 		this.setNextActivity(null);
 		//TODO change the emergency 
@@ -123,6 +131,7 @@ public class Patient extends Resource implements ISchedule{
 			this.setEmergency(false);
 		}
 		this.present = false; //TODO change that
+		
 		
 		int prio = (int)(Math.random()*4+1);
 		switch (prio) {
@@ -167,6 +176,15 @@ public class Patient extends Resource implements ISchedule{
 		this.addWeek(weekId);
 		
 		this.referredDate = Date.dateNow();
+		this.center=center;
+		for (Sphere sphere : center.getSpheres()) {
+			if (sphere.getCancer()==this.getCancer()) {
+				this.sphere=sphere;
+			}
+		}
+		this.plannedSteps = new ArrayList<>();
+		this.steps = new ArrayList<>();
+		this.inCenter=true;
 	}
 	
 	public ArrayList<Doctor> doctorsTreatingPatientCancer(ArrayList<Doctor> doctors) {
@@ -205,13 +223,13 @@ public class Patient extends Resource implements ISchedule{
 
 
 
-	public int getCancer() {
+	public Cancer getCancer() {
 		return cancer;
 	}
 
 
 
-	public void setCancer(int cancer) {
+	public void setCancer(Cancer cancer) {
 		this.cancer = cancer;
 	}
 
@@ -391,6 +409,12 @@ public class Patient extends Resource implements ISchedule{
 	public ArrayList<Activity> getSteps() {
 		return steps;
 	}
+	
+	public Activity getLastStep(){
+		
+		return steps.get(getSteps().size());
+
+	}
 
 	public void setSteps(ArrayList<Activity> steps) {
 		this.steps = steps;
@@ -445,6 +469,52 @@ public class Patient extends Resource implements ISchedule{
 		
 		return businessDays;
 	}
+
+	public ArrayList <Activity> getPlannedSteps() {
+		return plannedSteps;
+	}
+
+	public void setPlannedSteps(ArrayList <Activity> plannedSteps) {
+		this.plannedSteps = plannedSteps;
+	}
+	
+	public Activity getLastPlannedStep(){
+		int size= this.getPlannedSteps().size();
+		Activity lastPlannedStep= this.getPlannedSteps().get(size-1);
+		return lastPlannedStep;
+	}
+
+	public boolean isInCenter() {
+		return inCenter;
+	}
+
+	public void setInCenter(boolean inCenter) {
+		this.inCenter = inCenter;
+	}
+
+	public Sphere getSphere() {
+		return sphere;
+	}
+
+	public void setSphere(Sphere sphere) {
+		this.sphere = sphere;
+	}
+
+	public Center getCenter() {
+		return center;
+	}
+
+	public void setCenter(Center center) {
+		this.center = center;
+	}
+
+
+
+
+
+
+
+
 
 
 

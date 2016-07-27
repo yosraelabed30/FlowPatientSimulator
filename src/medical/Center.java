@@ -23,6 +23,7 @@ public class Center {
 	private Dosimetrist dosimetrists;
 	private AdminAgent adminAgent;
 	private Technologist technologist;
+	private ArrayList <Sphere> spheres;
 	
 	public Center(){
 		super();
@@ -33,6 +34,7 @@ public class Center {
 		this.scans = new ArrayList<>();
 		this.chefSpheres = new ArrayList<>();
 		this.treatmentMachines = new ArrayList<>();
+		this.spheres = new ArrayList<>();
 	}
 
 	
@@ -43,7 +45,7 @@ public class Center {
 			ArrayList<Scan> scans,
 			ArrayList<TreatmentMachine> treatmentMachines,
 			Dosimetrist dosimetrists, AdminAgent adminAgent,
-			Technologist technologist) {
+			Technologist technologist, ArrayList <Sphere> spheres) {
 		super();
 		this.centerId = centerId;
 		this.welcome = welcome;
@@ -56,6 +58,7 @@ public class Center {
 		this.dosimetrists = dosimetrists;
 		this.adminAgent = adminAgent;
 		this.technologist = technologist;
+		this.spheres=spheres;
 	}
 
 
@@ -202,6 +205,18 @@ public class Center {
 
 	public void setScans(ArrayList<Scan> scans) {
 		this.scans = scans;
+	}
+
+
+
+	public ArrayList <Sphere> getSpheres() {
+		return spheres;
+	}
+
+
+
+	public void setSpheres(ArrayList <Sphere> spheres) {
+		this.spheres = spheres;
 	}
 
 	

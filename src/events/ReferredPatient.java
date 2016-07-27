@@ -31,7 +31,8 @@ public class ReferredPatient extends ActivityEvent{
 				/*
 				 * we suppose, for now, that there is only one sphere corresponding to the patient's cancer
 				 */
-				if(chef.sphereCorrespondsTo(patient.getCancer())){
+				if(chef.getSphere().getCancer()==patient.getCancer()){
+					patient.setSphere(chef.getSphere());
 					chef.processUrgentDemands(patient);
 					break;
 				}

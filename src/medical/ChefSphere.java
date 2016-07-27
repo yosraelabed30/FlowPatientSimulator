@@ -5,42 +5,44 @@ import java.util.Iterator;
 import java.util.LinkedList;
 
 import scheduling.Activity;
+import scheduling.ActivityStatus;
 import scheduling.ActivityType;
+import scheduling.Block;
 import scheduling.BlockType;
 import scheduling.Date;
+import scheduling.Day;
 import tools.Time;
-import events.Arrival;
-import events.CheckAndPreConsultation;
+import events.ActivityEvent;
+import events.ArrivalConsultation;
+import events.PreConsultation;
 import events.Consultation;
 
-public class ChefSphere extends Resource{
-	private ArrayList<Doctor> doctors;
-	ArrayList<Integer> specialities;
-	LinkedList<Patient> demands;
-	private int centerId;
+public class ChefSphere {
 	
-	public ChefSphere(Center center, ArrayList<Doctor> doctors,
-			ArrayList<Integer> specialities) {
-		super(center);
-		this.doctors = doctors;
-		this.specialities = specialities;
+	LinkedList<Patient> demands;
+	private Sphere sphere;
+	
+	
+	public ChefSphere( Sphere sphere) {
+		this.sphere=sphere;
 		this.demands = new LinkedList<>();
 	}
 
 
 	public void processUrgentDemands(Patient patient){
 		int duration =45;
+		int lateness= Integer.MAX_VALUE;
 		Date dateLowerBound= Date.dateNow();
 		Activity best= null; 
 		ArrayList<Doctor> competentDoctors = new ArrayList<>();
-		for (Doctor doctor : doctors) {
+		for (Doctor doctor : this.getSphere().getDoctors()) {
 			Activity tmp = null;
-			if (doctor.hasSkillsToTreat(patient)){
+			if (doctor.canTreat(patient)){
 				competentDoctors.add(doctor);
 				tmp=doctor.getSchedule().getFirstAvailabilityFridayQuotas(duration, BlockType.Consultation,dateLowerBound);
-		    }
-			if (best == null ||tmp.startsEarlierThan(best) ) {
-				best = tmp;
+				if (best == null ||tmp.startsEarlierThan(best) ) {
+					best = tmp;
+				}
 			}
 					
 		}
@@ -58,14 +60,14 @@ public class ChefSphere extends Resource{
 		}
 	
 		if(best!=null){
-			Doctor firstAvailable = (Doctor) best.getResource();
+			Doctor firstAvailable = (Doctor) best.getiSchedule();
 			patient.setDoctor(firstAvailable);
 			int weekId = best.getWeek().getWeekId();
 			int dayId = best.getDay().getDayId();
 			int start = (weekId==dateLowerBound.getWeekId() && dayId==dateLowerBound.getDayId())? Math.max(dateLowerBound.getMinute(), best.getStart()) : best.getStart();
 			int end = start+duration;
 			
-			CheckAndPreConsultation check = new CheckAndPreConsultation(patient, false, getCenter().getAdminAgent());
+			PreConsultation check = new PreConsultation(patient, false, this.getSphere().getCenter().getAdminAgent());
 			Activity consultationForDoctor = new Activity(best.getBlock(), start, end, ActivityType.Consultation, check);
 			best.insert(consultationForDoctor);
 			
@@ -73,23 +75,22 @@ public class ChefSphere extends Resource{
 			best.getWeek().decreaseQuotas();
 			
 			Activity consultationForPatient = consultationForDoctor.clone(); //at that moment, consultationForPatient's block is the one of consultationForDoctor
-			Arrival arrival =  new Arrival();
+			ArrivalConsultation arrival =  new ArrivalConsultation();
+			arrival.setLateness(lateness);
 			arrival.setPriority(0); //patient arrives first then the presence is checked
 			consultationForPatient.setActivityEvent(arrival);
-			
+			patient.getPlannedSteps().add(consultationForPatient);
 			Activity free = patient.getSchedule().findFreeActivityToInsertOtherActivity(weekId, dayId, start, end);
 
 			free.insert(consultationForPatient); //and when inserted, consultationForPatient's block is the one of free
+			System.out.println("consultation : "+consultationForPatient.getDate()+" pour ce patient "+patient.getId()+" avec prio  "+patient.getPriority());
 		}
 		else{
 			System.out.println("A consultation could not be found for a patient : "+patient.getId()+", "+patient.getPriority());
 		}
-
 	}
 	
-	public boolean sphereCorrespondsTo(int cancer) {
-		return specialities.contains(cancer);
-	}
+
 
 	public void addToDemands(Patient patient) {
 		this.demands.add(patient);
@@ -107,4 +108,82 @@ public class ChefSphere extends Resource{
 			demandsIter.remove();
 		}
 	}
+	
+	public void delayConsultation(Patient patient){
+		int duration=30;
+		Activity best= null;
+		Doctor doctor=patient.getDoctor();
+		best= doctor.getSchedule().getFirstAvailabilityFridayQuotasBeforeTheEndOfTheDay(duration, BlockType.Consultation,Date.dateNow());
+		if (best == null){
+			if(doctor.isOverTime()== true){
+			 best= doctor.getSchedule().getFirstAvailabilityFridayQuotasBeforeTheEndOfTheDay(duration, BlockType.NotWorking, Date.dateNow());
+				
+			}
+			else {
+				this.processUrgentDemands(patient);
+				// on suppose que si le patient est arrivé, il va être traité comme urgent et pris en charge avant qu'il quitte
+			}
+		}
+		if (best!=null){
+			int start = best.getStart();
+			int end = start+duration;
+			
+			PreConsultation check = new PreConsultation(patient, false, this.getSphere().getCenter().getAdminAgent());
+			Activity consultationForDoctor = new Activity(best.getBlock(), start, end, ActivityType.Consultation, check);
+			best.insert(consultationForDoctor);
+
+			Activity consultationForPatient = consultationForDoctor.clone(); 
+			Activity free = patient.getSchedule().findFreeActivityToInsertOtherActivity(best.getDate().getWeekId(), best.getDate().getDayId(), start, end);
+			free.insert(consultationForPatient); 
+			
+		}
+		
+
+	}
+
+	public void NoShowConsultation (Date date){
+		ArrayList <Doctor> doctorsSphere = this.getSphere().getDoctors();
+		Date dateOfNoShow = date.decrease();
+		int weekId=dateOfNoShow.getWeekId();
+		int dayId= dateOfNoShow.getDayId();
+
+		for (Doctor doctor : doctorsSphere) {
+			ArrayList<Block> blocks =doctor.getSchedule().getDay(weekId, dayId).getBlocks();
+			
+			for (Block block : blocks) {
+				if (block.getType()==BlockType.Consultation){
+					LinkedList<Activity> activities =  block.getActivities();
+					for (Activity activity : activities) {
+						if (activity.getStatus()==ActivityStatus.ToPostpone){
+							PreConsultation activityEvent= (PreConsultation) activity.getActivityEvent();
+							if (activityEvent.getPatient().isInCenter() && activityEvent.getPatient().getSphere()==this.getSphere()){
+								this.processUrgentDemands(activityEvent.getPatient());
+							}
+							else{
+								activityEvent.getPatient().setOut(true);
+							}
+						}
+					}
+				}
+				
+			}
+			
+			
+		}
+
+	}
+	public Sphere getSphere() {
+		return sphere;
+	}
+
+
+	public void setSphere(Sphere sphere) {
+		this.sphere = sphere;
+	}
+
+
+
+
+
+
 }
