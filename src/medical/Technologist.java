@@ -25,13 +25,13 @@ import events.Treatment;
 import fileComparators.FileComparator1;
 
 public class Technologist extends Resource implements ISchedule{
-	private static final int ArrayList = 0;
+	
 	private LinkedList<Patient> filesForPlanification;
 	private ArrayList<Scan> scans;
 	private ArrayList<TreatmentMachine> tmachines;
-	private LinkedList<Patient> filesForPreContouring;
+	private static LinkedList<Patient> filesForPreContouring;
 	private Schedule schedule ;
-	private LevelTechnologist level;
+	
 	
 	
 	public Technologist(Center center){
@@ -45,7 +45,7 @@ public class Technologist extends Resource implements ISchedule{
 		this.filesForPlanification = filesForPlanification;
 		this.setScans(scans);
 		this.tmachines = tmachines;
-		this.filesForPreContouring = filesForPreContouring;
+		Technologist.filesForPreContouring = filesForPreContouring;
 	}
 	
 	public void processPatientFilesForPlanification(){
@@ -178,7 +178,7 @@ public class Technologist extends Resource implements ISchedule{
 		Activity best = null;
 		ArrayList<TreatmentMachine> adequateMachine= new ArrayList<>();
 		for (TreatmentMachine treatmentMachine : this.getCenter().getTreatmentMachines()) {
-			if (treatmentMachine.getTreatmentTechnic()==patient.getTreatmentTechnic()) {
+			if (treatmentMachine.getTreatmentTechnics().contains(patient.getTreatmentTechnic())) {
 				Activity tmp = null;
 				adequateMachine.add(treatmentMachine);
 				if (patient.getPriority()== Priority.P1 || patient.getPriority()== Priority.P2){
@@ -227,6 +227,8 @@ public class Technologist extends Resource implements ISchedule{
 			Activity firstTreatment = new Activity(start,duration,type,event);
 			best.insert(firstTreatment);
 			Date date = firstTreatment.getDate();
+			
+			patient.getPlannedStepsPreTreatment().add(best);
 
 			boolean scheduled = false;
 			if (patient.getPriority()==Priority.P3 || patient.getPriority()==Priority.P4){
@@ -259,7 +261,7 @@ public class Technologist extends Resource implements ISchedule{
 		return best;
 	}
 
-	private boolean isBeforeDeadline(int remainingDaysTillDeadLine, int weekId, int dayId) {
+	private boolean isBeforeDeadline (int remainingDaysTillDeadLine, int weekId, int dayId) {
 		boolean res = false;
 		int time = Time.time();
 		int weekNow = Time.weekCorrespondingToTime(time);
@@ -315,18 +317,19 @@ public class Technologist extends Resource implements ISchedule{
 		}
 	}
 
-	public LinkedList<Patient> getFilesForPreContouring() {
+	public static LinkedList<Patient> getFilesForPreContouring() {
 		return filesForPreContouring;
 	}
 
-	public void setFilesForPreContouring(LinkedList<Patient> filesForPreContouring) {
-		this.filesForPreContouring = filesForPreContouring;
+	public static void setFilesForPreContouring(LinkedList<Patient> filesForPreContouring) {
+		Technologist.filesForPreContouring = filesForPreContouring;
 	}
 
 	public LinkedList<Patient> getFilesForCTSimTreatment() {
 		return filesForPlanification;
 	}
 
+	
 	public void setFilesForCTSimTreatment(LinkedList<Patient> filesForCTSimTreatment) {
 		this.filesForPlanification = filesForCTSimTreatment;
 	}
@@ -355,13 +358,6 @@ public class Technologist extends Resource implements ISchedule{
 	return (this.getSchedule().addWeek(weekId));
 	}
 
-	public LevelTechnologist getLevel() {
-		return level;
-	}
-
-	public void setLevel(LevelTechnologist level) {
-		this.level = level;
-	}
 	
 	public Activity DelayTreatment(Patient patient) {
 		Activity best = null;
@@ -373,7 +369,7 @@ public class Technologist extends Resource implements ISchedule{
 		arrivalMinutes = patient.getArrivalMinutes();
 
 		for (TreatmentMachine treatmentMachine : this.getCenter().getTreatmentMachines()) {
-			if (treatmentMachine.getTreatmentTechnic() == patient.getTreatmentTechnic()) {
+			if (treatmentMachine.getTreatmentTechnics() .contains(patient.getTreatmentTechnic()) ) {
 				adequateMachine.add(treatmentMachine);
 				tmp = treatmentMachine.getSchedule().getFirstAvailabilityBeforeTheEndOfTheDay(duration,
 						BlockType.Treatment, arrivalMinutes);
@@ -413,7 +409,7 @@ public class Technologist extends Resource implements ISchedule{
 		Date date = best.getDate().increase();
 		TreatmentMachine machine = (TreatmentMachine) best.getiSchedule();
 		for (TreatmentMachine treatmentMachine : this.getCenter().getTreatmentMachines()) {
-			if (treatmentMachine.getTreatmentTechnic() == patient.getTreatmentTechnic()) {
+			if (treatmentMachine.getTreatmentTechnics().contains(patient.getTreatmentTechnic()) ) {
 				adequateMachine.add(treatmentMachine);
 			}
 		}

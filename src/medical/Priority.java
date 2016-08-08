@@ -30,4 +30,46 @@ public enum Priority {
 		this.delay = delay;
 	}
 	
+	public static Priority getPriority(int order, int delay){
+		for (Priority priority : Priority.values()) {
+			if (priority.getOrder()== order && priority.getDelay() == delay){
+				return priority;
+			}
+		}
+		return null;
+	}
+	
+	public static Priority generatePriority(){
+		
+		int order ;
+		int delay ;
+		double i = Math.random();
+		double j = Math.random();
+		double z = Math.random();
+		
+		if (i<= 0.8) {
+			order = 3;
+			delay = 1;
+		} 
+		else if(j<=0.7) {
+			order =2;
+			delay = 3;
+			
+		}
+		else if (z<=0.8){
+			order =4;
+			delay = 14;
+		}
+		else {
+			order =1;
+			delay = 28;
+		}
+		Priority priority = getPriority(order, delay);
+		if(priority==null){
+			System.out.println("qsd");
+		}
+		return priority;
+		
+	}
+	
 }

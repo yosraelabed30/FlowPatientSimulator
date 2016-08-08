@@ -84,6 +84,7 @@ public class ChefSphere {
 
 			free.insert(consultationForPatient); //and when inserted, consultationForPatient's block is the one of free
 			System.out.println("consultation : "+consultationForPatient.getDate()+" pour ce patient "+patient.getId()+" avec prio  "+patient.getPriority());
+			patient.getPlannedStepsPreTreatment().add(best);
 		}
 		else{
 			System.out.println("A consultation could not be found for a patient : "+patient.getId()+", "+patient.getPriority());
@@ -135,6 +136,8 @@ public class ChefSphere {
 			Activity consultationForPatient = consultationForDoctor.clone(); 
 			Activity free = patient.getSchedule().findFreeActivityToInsertOtherActivity(best.getDate().getWeekId(), best.getDate().getDayId(), start, end);
 			free.insert(consultationForPatient); 
+			patient.getPlannedStepsPreTreatment().removeFirst();
+			patient.getPlannedStepsPreTreatment().add(free);
 			
 		}
 		
@@ -157,7 +160,9 @@ public class ChefSphere {
 						if (activity.getStatus()==ActivityStatus.ToPostpone){
 							PreConsultation activityEvent= (PreConsultation) activity.getActivityEvent();
 							if (activityEvent.getPatient().isInCenter() && activityEvent.getPatient().getSphere()==this.getSphere()){
+								activityEvent.getPatient().getPlannedStepsPreTreatment().removeFirst();
 								this.processUrgentDemands(activityEvent.getPatient());
+								
 							}
 							else{
 								activityEvent.getPatient().setOut(true);

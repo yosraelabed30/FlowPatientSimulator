@@ -1,6 +1,7 @@
 package simulation;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 
 import medical.AdminAgent;
 import medical.Cancer;
@@ -14,7 +15,11 @@ import medical.Scan;
 import medical.Technologist;
 import medical.TreatmentMachine;
 import medical.TreatmentTechnic;
+import events.PreConsultation;
 import events.ReferredPatient;
+import events.Treatment;
+import scheduling.Activity;
+import scheduling.ActivityType;
 import scheduling.Block;
 import scheduling.BlockType;
 import scheduling.Date;
@@ -108,8 +113,14 @@ public class FlowOfPatients {
 			blocksTab3.add(blocks1);
 			blocksTab4.add(blocks2);
 		}
-		test.getCenter().getTreatmentMachines().add(new TreatmentMachine(test.getCenter(), TreatmentTechnic.technic1, blocksTab3));
-		test.getCenter().getTreatmentMachines().add(new TreatmentMachine(test.getCenter(), TreatmentTechnic.technic2, blocksTab4));
+		ArrayList <TreatmentTechnic> treatmentTechnic1 = new ArrayList<>();
+		treatmentTechnic1.add(TreatmentTechnic.TX07213D);
+		treatmentTechnic1.add(TreatmentTechnic.TX0721IMRT);
+		ArrayList <TreatmentTechnic> treatmentTechnic2 = new ArrayList<>();
+		treatmentTechnic2.add(TreatmentTechnic.TX0721IMRT);
+		treatmentTechnic2.add(TreatmentTechnic.TX2053D);
+		test.getCenter().getTreatmentMachines().add(new TreatmentMachine(test.getCenter(), treatmentTechnic1, blocksTab3));
+		test.getCenter().getTreatmentMachines().add(new TreatmentMachine(test.getCenter(), treatmentTechnic2, blocksTab4));
 		
 		ArrayList<ArrayList<Block>>blocksTab5 = new ArrayList<ArrayList<Block>>(7);
 		ArrayList<ArrayList<Block>>blocksTab6 = new ArrayList<ArrayList<Block>>(7);
@@ -221,20 +232,116 @@ public class FlowOfPatients {
 
 		public void actions() {
 			getCenter().setWelcome(false);
-			new DayStart().schedule(14*60);
-			
+			new DayStart().schedule(14 * 60);
+
 			getCenter().getAdminAgent().processDemands();
 			for (ChefSphere chef : getCenter().getChefSpheres()) {
 				chef.processDemands();
 			}
-//			center.getTechnologist().processPatientFilesForPlanification();
-			
+			// center.getTechnologist().processPatientFilesForPlanification();
+
 			getCenter().fromPatientsToPatientsOut();
+			isReadyForTheTreatment(2);
+			isReadyForTheTreatment(1);
+
+		}
+
+		public void isReadyForTheTreatment(int counter) {
+
+			LinkedList<Patient> patients = getCenter().getPatients();
+			for (Patient patient : patients) {
+				int duration = 45;
+				Date now = Date.dateNow();
+				Date daysBeforeTheFirstTreatment = now.increase(counter);
+				Date firstTreatment = patient.getPlannedSteps().getFirst().getDate();
+				if (firstTreatment.getWeekId() == daysBeforeTheFirstTreatment.getWeekId()
+						&& firstTreatment.getDayId() == daysBeforeTheFirstTreatment.getDayId()) {
+					Doctor doctor = patient.getDoctor();
+					TreatmentMachine treatmentMachine = (TreatmentMachine) patient.getFirstTreatment().getiSchedule();
+					if (doctor.getFilesForContouring().contains(patient)) {
+
+						patient.getPlannedSteps().poll();
+						treatmentMachine.getSchedule().getActivityAssociated(firstTreatment).delete();
+						patient.getSchedule().getActivityAssociated(firstTreatment).delete();
+						Date lastTreatment = patient.getPlannedSteps().getLast().getDate();
+						Date newLastTreatment = lastTreatment.increase();
+						Activity best = treatmentMachine.getSchedule()
+								.findFreeActivityToInsertOtherActivity(newLastTreatment, duration);
+
+						patient.setFirstTreatment(patient.getPlannedSteps().getFirst());
+
+						if (best != null) {
+							int start = best.getStart();
+							int end = start + duration;
+
+							Treatment treatment = new Treatment(patient);
+							Activity treatmentActivity = new Activity(best.getBlock(), start, end,
+									ActivityType.Treatment, treatment);
+							best.insert(treatmentActivity);
+
+							Activity treatmentActivityPatient = treatmentActivity.clone();
+							Activity free = patient.getSchedule().findFreeActivityToInsertOtherActivity(
+									best.getDate().getWeekId(), best.getDate().getDayId(), start, end);
+							free.insert(treatmentActivityPatient);
+							patient.getPlannedSteps().add(best);
+
+						}
+
+						else {
+							TreatmentTechnic treatmentTechnic = patient.getTreatmentTechnic();
+							ArrayList<TreatmentMachine> treatmentMachines = getCenter().getTreatmentMachines();
+							ArrayList<TreatmentMachine> adequateMachines = null;
+							for (TreatmentMachine treatmentMachine2 : treatmentMachines) {
+								if (treatmentMachine2.getTreatmentTechnics().contains(treatmentTechnic)) {
+									adequateMachines.add(treatmentMachine2);
+								}
+							}
+							for (TreatmentMachine adequateMachine : adequateMachines) {
+								Activity tmp = adequateMachine.getSchedule()
+										.findFreeActivityToInsertOtherActivity(newLastTreatment, duration);
+								if (best == null || tmp.startsEarlierThan(best)) {
+									best = tmp;
+								}
+							}
+							if (best == null) {
+								best = treatmentMachine.getSchedule().getFirstAvailabilityNotWeekend(duration,
+										BlockType.Treatment, patient.getPlannedSteps().getFirst().getDate().getWeekId(),
+										patient.getPlannedSteps().getFirst().getDate().getDayId(),
+										patient.getPlannedSteps().getFirst().getDate().getMinute(),
+										patient.getPlannedSteps().getFirst().getDate().getWeekId(),
+										patient.getPlannedSteps().getFirst().getDate().getDayId(), 18 * 60);
+							}
+							if (best != null) {
+								int start = best.getStart();
+								int end = start + duration;
+
+								Treatment treatment = new Treatment(patient);
+								Activity treatmentActivity = new Activity(best.getBlock(), start, end,
+										ActivityType.Treatment, treatment);
+								best.insert(treatmentActivity);
+
+								Activity treatmentActivityPatient = treatmentActivity.clone();
+								Activity free = patient.getSchedule().findFreeActivityToInsertOtherActivity(
+										best.getDate().getWeekId(), best.getDate().getDayId(), start, end);
+								free.insert(treatmentActivityPatient);
+								patient.getPlannedSteps().add(best);
+
+							}
+
+						}
+
+					}
+
+				}
+
+			}
+
 			
 		}
-		
-	}
 	
+
+	}
+
 	class EndOfSim extends Event {
 		public void actions() {
 			Sim.stop();

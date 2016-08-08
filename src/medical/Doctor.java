@@ -5,33 +5,39 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedList;
 
+import org.jfree.data.time.Day;
+
+import events.Contouring;
 import scheduling.Block;
+import scheduling.BlockType;
 import scheduling.ISchedule;
 import scheduling.Schedule;
 import scheduling.Week;
+import tools.Time;
 import fileComparators.FileComparator1;
 
-public class Doctor  implements ISchedule{
-	static private int doctorClassId=0;
+public class Doctor implements ISchedule {
+	static private int doctorClassId = 0;
 	private int id;
 	private ArrayList<Sphere> spheres;
 	private ArrayList<Patient> folders;
-	private LinkedList<Patient> filesForContouring; //TODO during the contouring block
-	private LinkedList<Patient> filesForDosi;
+	private LinkedList<Patient> filesForContouring; // TODO during the
+													// contouring block
+
+	private LinkedList<Patient> filesForPlanTreatment;
 	private Schedule schedule;
 	private boolean overTime;
 	private Center center;
-	
 
-
-	public Doctor(ArrayList<ArrayList<Block>> blocksTab, ArrayList<Sphere> spheres, Center center ) {
+	public Doctor(ArrayList<ArrayList<Block>> blocksTab, ArrayList<Sphere> spheres, Center center) {
 
 		this.setCenter(center);
 		this.id = doctorClassId++;
-		this.spheres=spheres;
+		this.spheres = spheres;
 		this.folders = new ArrayList<>();
 		this.filesForContouring = new LinkedList<>();
-		this.filesForDosi = new LinkedList<>();
+
+		this.filesForPlanTreatment = new LinkedList<>();
 		this.schedule = new Schedule(this);
 		for (int i = 0; i < 7; i++) {
 			for (Block block : blocksTab.get(i)) {
@@ -42,8 +48,7 @@ public class Doctor  implements ISchedule{
 		if (Math.random() > 0.5) {
 			this.setOverTime(true);
 
-		}
-		else {
+		} else {
 			this.setOverTime(false);
 		}
 
@@ -51,10 +56,10 @@ public class Doctor  implements ISchedule{
 
 	public boolean canTreat(Patient patient) {
 		for (Sphere sphere : spheres) {
-			if (sphere.getCancer()==patient.getCancer()){
+			if (sphere.getCancer() == patient.getCancer()) {
 				return true;
 			}
-			
+
 		}
 		return false;
 	}
@@ -75,33 +80,35 @@ public class Doctor  implements ISchedule{
 		this.folders = folders;
 	}
 
-
 	public boolean isRadiotherapyNeeded(Patient patient) {
-		// TODO 
-		return true;
+
+		boolean need = true;
+		if (Math.random() <= 0.75) {
+			need = true;
+		} 
+		else {
+			need = false;
+		}
+		return need;
 	}
 
 	public TreatmentTechnic decidesTechnic(Patient patient) {
-		// TODO change that to sth realistic
-		int a = (int)Math.random()*2;
-		TreatmentTechnic t = null;
-		if(a==0){
-			t = TreatmentTechnic.technic1;
-		}
-		else{
-			t = TreatmentTechnic.technic2;
-		}
-		return t;
+
+		TreatmentTechnic treatmentTechnic = TreatmentTechnic.generateTreatmentTechnic();
+
+		return treatmentTechnic;
 	}
 
 	public ArrayList<ScanTechnic> decidesImageryTechnics(Patient patient) {
-		// TODO change it not to return all the technics
-		return new ArrayList<ScanTechnic>(Arrays.asList(ScanTechnic.values()));
+
+		int index = (int) ((int) 1 + (Math.random() * (3 - 1)));
+
+		return ScanTechnic.generateScanTechnic(index);
 	}
 
 	public int decidesNbTreatments(Patient patient) {
-		// TODO change it to correspond to reality
-		return 25;
+		int nbTreatments = (int) ((int) 8 + (Math.random() * (40 - 8)));
+		return nbTreatments;
 	}
 
 	public LinkedList<Patient> getFilesForContouring() {
@@ -111,17 +118,9 @@ public class Doctor  implements ISchedule{
 	public void setFilesForContouring(LinkedList<Patient> filesForContouring) {
 		this.filesForContouring = filesForContouring;
 	}
-	
-	public void processPatientFilesForContouring(){
+
+	public void processPatientFilesForContouring() {
 		Collections.sort(this.filesForContouring, new FileComparator1());
-	}
-
-	public LinkedList<Patient> getFilesForDosi() {
-		return filesForDosi;
-	}
-
-	public void setFilesForDosi(LinkedList<Patient> filesForDosi) {
-		this.filesForDosi = filesForDosi;
 	}
 
 	@Override
@@ -159,6 +158,14 @@ public class Doctor  implements ISchedule{
 
 	public void setCenter(Center center) {
 		this.center = center;
+	}
+
+	public LinkedList<Patient> getFilesForPlanTreatment() {
+		return filesForPlanTreatment;
+	}
+
+	public void setFilesForPlanTreatment(LinkedList<Patient> filesForPlanTreatment) {
+		this.filesForPlanTreatment = filesForPlanTreatment;
 	}
 
 }

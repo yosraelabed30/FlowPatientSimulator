@@ -73,7 +73,7 @@ public class Patient  implements ISchedule{
 	 * 1 = P1
 	 * 2 = P2, etc
 	 */
-	private Priority priority;
+	
 	
 	private MachineType machineType;
 	
@@ -81,25 +81,19 @@ public class Patient  implements ISchedule{
 	 * TODO recheck for improvements, scheduled during planif and used after
 	 */
 	private Activity firstTreatment;
-	private Activity otherTreatments;
-	private Activity CTSim;
-	
 	private TreatmentTechnic treatmentTechnic;
 	private boolean moldNeeded;
-	
 	private ArrayList<ScanTechnic> imageryTechnics;
-	
 	private int nbTreatments;
-	
 	private boolean inCenter;
 	private Schedule schedule;
 	private ArrayList<Activity> steps;
-	private ArrayList <Activity> plannedSteps;
-	
-	
+	private LinkedList<Activity> plannedStepsTreatments;
+	private LinkedList<Activity> plannedStepsPreTreatment;
 	private Date referredDate;
 	private Sphere sphere;
 	private Center center;
+	private Priority priority;
 	
 	
 
@@ -133,24 +127,8 @@ public class Patient  implements ISchedule{
 		this.present = false; //TODO change that
 		
 		
-		int prio = (int)(Math.random()*4+1);
-		switch (prio) {
-		case 1:
-			this.setPriority(Priority.P1);
-			break;
-		case 2 :
-			this.setPriority(Priority.P2);
-			break;
-		case 3 :
-			this.setPriority(Priority.P3);
-			break;
-		case 4 :
-			this.setPriority(Priority.P4);
-			break;
-		default:
-			System.out.println("Issue : the patient priority at its creation");
-			break;
-		}
+		this.priority = Priority.generatePriority();
+	
 		
 		/*
 		 * The schedule
@@ -182,9 +160,12 @@ public class Patient  implements ISchedule{
 				this.sphere=sphere;
 			}
 		}
-		this.plannedSteps = new ArrayList<>();
+		this.plannedStepsTreatments = new LinkedList();
+		this.plannedStepsPreTreatment =new LinkedList();
 		this.steps = new ArrayList<>();
 		this.inCenter=true;
+		this.firstTreatment=firstTreatment;
+	
 	}
 	
 	public ArrayList<Doctor> doctorsTreatingPatientCancer(ArrayList<Doctor> doctors) {
@@ -442,6 +423,7 @@ public class Patient  implements ISchedule{
 		Date deadLine= Date.toDates(minDeadLine);
 		return deadLine;
 	}
+	
 
 	public Date getReferredDate() {
 		return referredDate;
@@ -470,12 +452,12 @@ public class Patient  implements ISchedule{
 		return businessDays;
 	}
 
-	public ArrayList <Activity> getPlannedSteps() {
-		return plannedSteps;
+	public LinkedList <Activity> getPlannedSteps() {
+		return plannedStepsTreatments;
 	}
 
-	public void setPlannedSteps(ArrayList <Activity> plannedSteps) {
-		this.plannedSteps = plannedSteps;
+	public void setPlannedSteps(LinkedList <Activity> plannedSteps) {
+		this.plannedStepsTreatments = plannedSteps;
 	}
 	
 	public Activity getLastPlannedStep(){
@@ -508,14 +490,21 @@ public class Patient  implements ISchedule{
 		this.center = center;
 	}
 
+	public Activity getFirstTreatment() {
+		return firstTreatment;
+	}
 
+	public void setFirstTreatment(Activity firstTreatment) {
+		this.firstTreatment = firstTreatment;
+	}
 
+	public LinkedList<Activity> getPlannedStepsPreTreatment() {
+		return plannedStepsPreTreatment;
+	}
 
-
-
-
-
-
+	public void setPlannedStepsPreTreatment(LinkedList<Activity> plannedStepsPreTreatment) {
+		this.plannedStepsPreTreatment = plannedStepsPreTreatment;
+	}
 
 
 }

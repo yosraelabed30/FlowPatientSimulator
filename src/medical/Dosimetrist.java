@@ -1,6 +1,6 @@
 package medical;
 
-import java.util.ArrayList;
+
 import java.util.Collections;
 import java.util.LinkedList;
 
@@ -9,14 +9,16 @@ import fileComparators.FileComparator1;
 public class Dosimetrist extends Resource{
 	static private int dosimetristClassId=0;
 	private int id;
-	private ArrayList<Patient> patients;
-	private LinkedList<Patient> filesForDosi;
+
+	private static LinkedList<Patient> filesForDosi;
+	private static LinkedList<Patient> filesForVerif;
 	
-	public Dosimetrist(Center center, int id, ArrayList<Patient> patients) {
+	public Dosimetrist(Center center, int id) {
 		super(center);
 		this.id = id;
-		this.patients = patients;
-		this.filesForDosi = new LinkedList<Patient>();
+		
+		Dosimetrist.filesForDosi = new LinkedList<Patient>();
+		Dosimetrist.filesForVerif=new LinkedList<Patient>();
 	}
 
 	public void processFilesForDosi(){
@@ -40,20 +42,20 @@ public class Dosimetrist extends Resource{
 		this.id = id;
 	}
 
-	public ArrayList<Patient> getPatients() {
-		return patients;
-	}
-
-	public void setPatients(ArrayList<Patient> patients) {
-		this.patients = patients;
-	}
-
-	public LinkedList<Patient> getFilesForDosi() {
+	public static LinkedList<Patient> getFilesForDosi() {
 		return filesForDosi;
 	}
 
 	public void setFilesForDosi(LinkedList<Patient> filesForDosi) {
-		this.filesForDosi = filesForDosi;
+		Dosimetrist.filesForDosi = filesForDosi;
+	}
+
+	public static LinkedList<Patient> getFilesForVerif() {
+		return filesForVerif;
+	}
+
+	public static void setFilesForVerif(LinkedList<Patient> filesForVerif) {
+		Dosimetrist.filesForVerif = filesForVerif;
 	}
 	
 }

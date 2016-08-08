@@ -144,20 +144,60 @@ public class Activity implements Comparable<Activity> {
 		}
 	}
 	
-	public void deleteActivityAssociated() {
+	public void delete() {
+
+		Block block = this.getBlock();
 		
-		Block block = this.getBlock();	
-		
-		if(block!=null){
-			LinkedList <Activity> activitiesAssociated = block.getActivities();
-			activitiesAssociated.remove(this);
-	
+
+		if (block != null) {
+			LinkedList<Activity> activities = block.getActivities();
+			this.setType(ActivityType.Free);
+			int index = activities.indexOf(this);
+			if (index == 0 && activities.size() >= 2) {
+				if (activities.get(1).getType() == ActivityType.Free) {
+					this.fusion(activities.get(1));
+				}
+
+			} else if (activities.size() >= 2 && index == activities.size() - 1) {
+				if (activities.get(index - 1).getType() == ActivityType.Free) {
+					this.fusion(activities.get(index - 1));
+				}
+
+			}
+
+			else if (activities.size() >= 3 && index != activities.size() - 1 && index != 0) {
+				if (activities.get(index - 1).getType() == ActivityType.Free
+						&& activities.get(index + 1).getType() != ActivityType.Free) {
+					this.fusion(activities.get(index - 1));
+				} else if (activities.get(index - 1).getType() != ActivityType.Free
+						&& activities.get(index + 1).getType() == ActivityType.Free) {
+					this.fusion(activities.get(index + 1));
+				} else if (activities.get(index - 1).getType() == ActivityType.Free
+						&& activities.get(index + 1).getType() == ActivityType.Free) {
+					this.fusion(activities.get(index - 1));
+					this.fusion(activities.get(index));
+				}
+			}
+
 		}
 	}
 	
 	/*
 	 * Getters and setters
 	 */
+
+	private void fusion(Activity activity) {
+
+		if (this.startsEarlierThan(activity)) {
+			this.setEnd(activity.getEnd());
+		} else {
+			this.setStart(activity.getStart());
+
+		}
+		this.getBlock().getActivities().remove(activity);
+		activity.setBlock(null);
+
+	}
 
 	public ActivityType getType() {
 		return type;
@@ -286,6 +326,8 @@ public class Activity implements Comparable<Activity> {
 		
 		Date date= new Date (this.getWeek().getWeekId(),this.getDay().getDayId(),this.getStart());
 		return date;
-		
+	
 	}
+	
+
 }

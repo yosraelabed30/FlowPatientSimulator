@@ -75,8 +75,6 @@ public class Date implements Comparable<Date>{
 	}
 
 	public Date increase() {
-
-		
 		int newWeekId = this.getWeekId();
 		int newDayId = this.getDayId();
 		int newMinute = this.getMinute();
@@ -163,6 +161,14 @@ public class Date implements Comparable<Date>{
 		}
 
 		return businessDay;
+	}
+
+	public Date increase(int counter) {
+		Date date = this;
+		for (int i=0 ; i<counter ;i++){
+			date = date.increase();
+		}
+		return date;
 	}
 
 	

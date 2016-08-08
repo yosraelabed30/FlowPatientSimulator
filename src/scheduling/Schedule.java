@@ -583,7 +583,7 @@ public class Schedule {
 
 	public void deleteFirstTreatmentAssociated(Date date) {
 
-		getActivityAssociated(date).deleteActivityAssociated();
+		getActivityAssociated(date).delete();
 
 	}
 
@@ -768,5 +768,7 @@ public class Schedule {
 	public void setiSchedule(ISchedule iSchedule) {
 		this.iSchedule = iSchedule;
 	}
+
+
 
 }

@@ -1,29 +1,67 @@
 package events;
 
-public class Contouring extends ActivityEvent{
+import java.util.LinkedList;
+
+import medical.Doctor;
+import medical.Dosimetrist;
+import medical.Patient;
+import medical.Priority;
+import medical.Technologist;
+import tools.Time;
+
+public class Contouring extends ActivityEvent {
 
 	public Contouring() {
 		super();
-		// TODO Auto-generated constructor stub
+		
 	}
 
 	@Override
 	public void childActions() {
-		// TODO send the patients files to the dosimetrist which will process the files, it takes an amount of time which follow a probability law, then only the 
-		// TODO schedule random activities of dosimetry approbations during the blocks Plan de traitement
+		Doctor doctor = (Doctor) this.getiSchedule();
+		LinkedList<Patient> filesForContouring = doctor.getFilesForContouring();
+		LinkedList< Patient> filesForDosi =Dosimetrist.getFilesForDosi();
+		int numberOfFilesTreated =0;
+		int time = Time.time();
+		int min = Time.minIntoTheDay(time);
+		while (!filesForContouring.isEmpty() && numberOfFilesTreated <= 4) {
+			Patient patient = filesForContouring.poll();
+			System.out.println("The folder of the patient id : " + patient.getId() + " with priority "
+					+ patient.getPriority() + " is supported for the Contouring " + min);
+	
+			filesForDosi.add(patient);
+			numberOfFilesTreated++;
+
+		}
 		
+
+
 	}
 
 	@Override
 	public ActivityEvent clone() {
 		// TODO Auto-generated method stub
-		return null;
+		return new Contouring();
 	}
 
-	@Override
+
+	public void generateDelay(Patient patient) {
+		
+		if (patient.getPriority() == Priority.P1 || patient.getPriority() == Priority.P1) {
+			this.delay = (int) (30+ Math.random() * 60 - 30);
+		} else {
+			this.delay = (int) (60 + Math.random() * (180 - 60));
+
+		}
+	
+		
+	}
+	
 	public void generateDelay() {
 		// TODO Auto-generated method stub
 		
 	}
-
+	
+	
+	
 }

@@ -10,11 +10,12 @@ import scheduling.Week;
 
 public class TreatmentMachine extends Resource implements ISchedule{
 	private Schedule schedule;
-	private TreatmentTechnic treatmentTechnic;
 	
-	public TreatmentMachine(Center center, TreatmentTechnic treatmentTechnic, ArrayList<ArrayList<Block>> blocksTab){
+	private ArrayList < TreatmentTechnic> treatmentTechnics;
+	
+	public TreatmentMachine(Center center, ArrayList < TreatmentTechnic> treatmentTechnics, ArrayList<ArrayList<Block>> blocksTab){
 		super(center);
-		this.treatmentTechnic = treatmentTechnic;
+		this.setTreatmentTechnics(treatmentTechnics);
 		this.schedule = new Schedule(this);
 		for(int i=0;i<7;i++){
 			for (Block block : blocksTab.get(i)) {
@@ -22,14 +23,6 @@ public class TreatmentMachine extends Resource implements ISchedule{
 			}
 			getSchedule().getDefaultWeek().getDay(i).setBlocks(blocksTab.get(i));
 		}
-	}
-	
-	public TreatmentTechnic getTreatmentTechnic() {
-		return treatmentTechnic;
-	}
-
-	public void setTreatmentTechnic(TreatmentTechnic treatmentTechnic) {
-		this.treatmentTechnic = treatmentTechnic;
 	}
 
 	@Override
@@ -43,6 +36,14 @@ public class TreatmentMachine extends Resource implements ISchedule{
 
 	public void setSchedule(Schedule schedule) {
 		this.schedule = schedule;
+	}
+
+	public ArrayList < TreatmentTechnic> getTreatmentTechnics() {
+		return treatmentTechnics;
+	}
+
+	public void setTreatmentTechnics(ArrayList < TreatmentTechnic> treatmentTechnics) {
+		this.treatmentTechnics = treatmentTechnics;
 	}
 
 }

@@ -11,7 +11,7 @@ public class Treatment extends ActivityEvent{
 
 	@Override
 	public void childActions() {
-		// TODO Auto-generated method stub
+		
 		
 	}
 
