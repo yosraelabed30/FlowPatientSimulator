@@ -24,7 +24,7 @@ public class PreConsultation extends ActivityEvent{
 		 */
 		int time = Time.time();
 		int min = Time.minIntoTheDay(time);
-		System.out.println("checking if patient id : "+getPatient().getId()+" with priority "+getPatient().getPriority()+" is present : "+getPatient().isPresent()+", at min : "+min);
+		System.out.println("PreConsultation : checking if patient id : "+getPatient().getId()+" with priority "+getPatient().getPriority()+" is present : "+getPatient().isPresent()+", at min : "+min+", with doctor id : "+getPatient().getDoctor().getId());
 		if(getPatient().isPresent()){
 			//schedule the pre-consultation event
 			new Consultation(this.patient).schedule(0);
@@ -54,7 +54,9 @@ public class PreConsultation extends ActivityEvent{
 
 	@Override
 	public ActivityEvent clone() {
-		return new PreConsultation(getPatient(), alreadyChecked, adminAgent);
+		PreConsultation clone = new PreConsultation(getPatient(), alreadyChecked, adminAgent);
+		clone.setActivity(this.getActivity());
+		return clone;
 	}
 
 	@Override

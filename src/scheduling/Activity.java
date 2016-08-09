@@ -122,18 +122,30 @@ public class Activity implements Comparable<Activity> {
 	 */
 	public void insert(Activity activity) {
 		Block block = this.getBlock();
+		boolean replacement = false;
 		if(block!=null){
 			if(activity.getStart() == this.getStart() && activity.getEnd() < this.getEnd()){
 				this.setStart(activity.getEnd());
+				this.getActivityEvent().cancel(); //the cancel method cancels this event before it occurs. Returns true if cancellation succeeds(this event was found in the list), false otherwise
 			}
 			else if(activity.getEnd() == this.getEnd() && activity.getStart() > this.getStart()){
 				this.setEnd(activity.getStart());
 			}
 			else if(activity.getStart() == this.getStart() && activity.getEnd() == this.getEnd()){
+				replacement=true;
+				this.getActivityEvent().cancel();
 				block.getActivities().remove(this);
 			}
 			else{
-				Activity free2 = this.clone();
+				Activity free2 = this.clone(); // TODO problem there, the activity cloned has a Done status, so when it's time to do the event associated to that activity, it is ignored. 
+				/*
+				 * Now the simple way to correct it is to set free2.status to NotDone.
+				 * Another way is to only set the status of an activity to done when the events associated to it are done. 
+				 * The latter is the most logical, it requires however to change the Activity.
+				 * Activity right now (06/08/16) has a start event, but no end event... this should be changed => see the idea of a list of activityEvent
+				 */
+				//TODO see with Yosra, we should schedule only the necessary time in the schedule of the doctor. Or else if he finishes in advance we should know what he should do
+				free2.setStatus(ActivityStatus.NotDone);
 				free2.setStart(activity.getEnd());
 				this.setEnd(activity.getStart());
 				block.getActivities().add(free2);
@@ -141,9 +153,27 @@ public class Activity implements Comparable<Activity> {
 			activity.setBlock(block);
 			block.getActivities().add(activity);
 			Collections.sort(block.getActivities());
+			if(this.isCurrent()){
+				Idle idle = ((Idle)this.getActivityEvent());
+				idle.generateDelay();
+				idle.getEnd().reschedule(idle.getDelay());
+			}
+			if(replacement){
+				this.setBlock(null);
+			}
+		}
+		else{
+			System.out.println("Activity insert ; the block of the activity in which we want to insert is null");
 		}
 	}
 	
+	public boolean isCurrent() {
+		return this.getSchedule().getCurrentActivityBeingDone()==this;
+	}
+	
+	/**
+	 * Only an activity which does not have a status free can be deleted
+	 */
 	public void delete() {
 
 		Block block = this.getBlock();
@@ -152,30 +182,31 @@ public class Activity implements Comparable<Activity> {
 		if (block != null) {
 			LinkedList<Activity> activities = block.getActivities();
 			this.setType(ActivityType.Free);
+			this.setActivityEvent(new Idle());
 			int index = activities.indexOf(this);
+			
 			if (index == 0 && activities.size() >= 2) {
 				if (activities.get(1).getType() == ActivityType.Free) {
-					this.fusion(activities.get(1));
+					this.merge(activities.get(1));
 				}
 
 			} else if (activities.size() >= 2 && index == activities.size() - 1) {
 				if (activities.get(index - 1).getType() == ActivityType.Free) {
-					this.fusion(activities.get(index - 1));
+					activities.get(index - 1).merge(this);
 				}
-
 			}
 
 			else if (activities.size() >= 3 && index != activities.size() - 1 && index != 0) {
 				if (activities.get(index - 1).getType() == ActivityType.Free
 						&& activities.get(index + 1).getType() != ActivityType.Free) {
-					this.fusion(activities.get(index - 1));
+					activities.get(index - 1).merge(this);
 				} else if (activities.get(index - 1).getType() != ActivityType.Free
 						&& activities.get(index + 1).getType() == ActivityType.Free) {
-					this.fusion(activities.get(index + 1));
+					this.merge(activities.get(index + 1));
 				} else if (activities.get(index - 1).getType() == ActivityType.Free
 						&& activities.get(index + 1).getType() == ActivityType.Free) {
-					this.fusion(activities.get(index - 1));
-					this.fusion(activities.get(index));
+					activities.get(index - 1).merge(this);
+					activities.get(index - 1).merge(activities.get(index));
 				}
 			}
 
@@ -186,19 +217,27 @@ public class Activity implements Comparable<Activity> {
 	 * Getters and setters
 	 */
 
-	private void fusion(Activity activity) {
-
+	/**
+	 * this must always be before activity
+	 * both this and activity must be free activity
+	 * @param activity
+	 */
+	private void merge(Activity activity) {
+		
 		if (this.startsEarlierThan(activity)) {
 			this.setEnd(activity.getEnd());
 		} else {
-			this.setStart(activity.getStart());
-
+			System.out.println("this should always be before activity");
 		}
 		this.getBlock().getActivities().remove(activity);
 		activity.setBlock(null);
-
+		if(this.isCurrent()){
+//			System.out.println("Fusion ; this activity id : "+this.activityId+", activity id : "+activity.getActivityId());
+			Idle idle = ((Idle)this.getActivityEvent());
+			idle.generateDelay();
+			idle.getEnd().reschedule(idle.getDelay());
+		}
 	}
-
 	public ActivityType getType() {
 		return type;
 	}
@@ -329,5 +368,87 @@ public class Activity implements Comparable<Activity> {
 	
 	}
 	
+	public Date getEndDate(){
+		// TODO exception si l'activité n'est pas liée à une semaine ou un jour
+		Date date = new Date(this.getWeek().getWeekId(), this.getDay()
+				.getDayId(), this.getEnd());
+		return date;
+	}
+	
+	/**
+	 * 
+	 * @param activity
+	 * @return 
+	 */
+	private static ArrayList<ArrayList<Integer>> exclude(
+			ArrayList<Integer> interval1, ArrayList<Integer> interval2) {
+		ArrayList<ArrayList<Integer>> res = new ArrayList<>();
+		ArrayList<Integer> remaining1 = new ArrayList<>();
+
+		if(interval2.get(0) == interval1.get(0) && interval2.get(1) == interval1.get(1)){
+			// do nothing
+		} else if (interval2.get(0) <= interval1.get(0)
+				&& interval2.get(1) >= interval1.get(0)
+				&& interval2.get(1) <= interval1.get(1)) {
+			remaining1.add(interval2.get(1));
+			remaining1.add(interval1.get(1));
+			res.add(remaining1);
+		} else if (interval2.get(1) >= interval1.get(1)
+				&& interval2.get(0) >= interval1.get(0)
+				&& interval2.get(0) <= interval1.get(1)) {
+			remaining1.add(interval1.get(0));
+			remaining1.add(interval2.get(0));
+			res.add(remaining1);
+		} else if (interval2.get(0) > interval1.get(0)
+				&& interval2.get(1) < interval1.get(1)) {
+			remaining1.add(interval1.get(0));
+			remaining1.add(interval2.get(0));
+			res.add(remaining1);
+			ArrayList<Integer> remaining2 = new ArrayList<>();
+			remaining2.add(interval2.get(1));
+			remaining2.add(interval1.get(1));
+			res.add(remaining2);
+		} else if (interval2.get(1) < interval1.get(0)
+				|| interval2.get(0) > interval1.get(1)) {
+			remaining1.add(interval1.get(0));
+			remaining1.add(interval1.get(1));
+		}
+		return res;
+	}
+
+	/**
+	 * The activities must not overlap
+	 * This method sort the activities before
+	 * @param activities
+	 * @return
+	 */
+	public ArrayList<ArrayList<Integer>> exclude(ArrayList<Activity> activities){
+		ArrayList<ArrayList<Integer>> res = new ArrayList<>();
+		ArrayList<Integer> thisInterval = new ArrayList<>();
+		thisInterval.add(this.getStart());
+		thisInterval.add(this.getEnd());
+		res.add(thisInterval);
+		if(activities!=null){
+			ArrayList<Activity> noNulls = new ArrayList<>();
+			for (Activity activity : activities) {
+				if(activity!=null){
+					noNulls.add(activity);
+				}
+			}
+			Collections.sort(noNulls);
+			for (Activity activity : noNulls) {
+				if(activity!=null && this.getDate().sameWeekAndDayAs(activity.getDate())){
+					ArrayList<Integer> activityInterval = new ArrayList<>();
+					activityInterval.add(activity.getStart());
+					activityInterval.add(activity.getEnd());
+					int indexLast = res.size()-1;
+					ArrayList<Integer> last = res.get(indexLast);
+					res.remove(indexLast);
+					res.addAll(Activity.exclude(last, activityInterval));
+				}
+			}
+		}
+		return res;
+	}
 
 }

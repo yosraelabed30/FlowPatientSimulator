@@ -1,5 +1,6 @@
 package events;
 
+import tools.Time;
 import medical.Patient;
 
 public class PostConsultation extends ActivityEvent{
@@ -15,13 +16,16 @@ public class PostConsultation extends ActivityEvent{
 	public void childActions() {
 		// TODO Auto-generated method stub
 		//the nurse does the education during this time
+		System.out.println("PostConsultation ; patient id : "+patient.getId()+", doctor id : "+patient.getDoctor().getId()+", at min : "+Time.minIntoTheDay(Time.time()));
 		getPatient().getDoctor().getSchedule().doNextTask();
 		new Planification(this.getPatient()).schedule(delay);
 	}
 
 	@Override
 	public ActivityEvent clone() {
-		return new PostConsultation(this.getPatient());
+		PostConsultation clone = new PostConsultation(this.getPatient());
+		clone.setActivity(this.getActivity());
+		return clone;
 	}
 
 	@Override

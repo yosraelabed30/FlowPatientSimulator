@@ -23,7 +23,6 @@ public enum ScanTechnic {
 	}
 	
 	public static ScanTechnic getScanTechnic(int index){
-
 		return ScanTechnic.values()[index];
 	}
 	
@@ -31,6 +30,6 @@ public enum ScanTechnic {
 
 		ArrayList<ScanTechnic> list = new ArrayList<ScanTechnic>(Arrays.asList(ScanTechnic.values()));
 		Collections.shuffle(list);
-		return (ArrayList<ScanTechnic>) list.subList(0, nbOfTechnics);
+		return new ArrayList<ScanTechnic> (list.subList(0, nbOfTechnics));
 	}
 }

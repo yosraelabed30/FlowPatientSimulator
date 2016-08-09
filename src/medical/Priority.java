@@ -49,7 +49,7 @@ public enum Priority {
 		
 		if (i<= 0.8) {
 			order = 3;
-			delay = 1;
+			delay = 14;
 		} 
 		else if(j<=0.7) {
 			order =2;
@@ -58,16 +58,14 @@ public enum Priority {
 		}
 		else if (z<=0.8){
 			order =4;
-			delay = 14;
+			delay = 28;
 		}
 		else {
 			order =1;
-			delay = 28;
+			delay = 1;
 		}
 		Priority priority = getPriority(order, delay);
-		if(priority==null){
-			System.out.println("qsd");
-		}
+
 		return priority;
 		
 	}

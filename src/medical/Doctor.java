@@ -102,7 +102,7 @@ public class Doctor implements ISchedule {
 	public ArrayList<ScanTechnic> decidesImageryTechnics(Patient patient) {
 
 		int index = (int) ((int) 1 + (Math.random() * (3 - 1)));
-
+		
 		return ScanTechnic.generateScanTechnic(index);
 	}
 

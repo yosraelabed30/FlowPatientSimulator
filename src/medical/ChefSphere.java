@@ -31,10 +31,18 @@ public class ChefSphere {
 
 	public void processUrgentDemands(Patient patient){
 		int duration =45;
-		int lateness= Integer.MAX_VALUE;
+		/**
+		 * TODO fix the lateness issue : a patient is late for everything
+		 */
+		int lateness= 0;
 		Date dateLowerBound= Date.dateNow();
 		Activity best= null; 
 		ArrayList<Doctor> competentDoctors = new ArrayList<>();
+		ArrayList<BlockType> blockTypes = new ArrayList<>();
+		blockTypes.add(BlockType.Consultation);
+		ArrayList<Integer> daysForbidden = new ArrayList<>();
+		daysForbidden.add(5);
+		daysForbidden.add(6);
 		for (Doctor doctor : this.getSphere().getDoctors()) {
 			Activity tmp = null;
 			if (doctor.canTreat(patient)){
@@ -47,6 +55,8 @@ public class ChefSphere {
 					
 		}
 		if (best==null || !(best.getDate().compareTo(patient.getDeadLine())==-1)){
+			blockTypes.remove(BlockType.Consultation);
+			blockTypes.add(BlockType.NotWorking);
 			for (Doctor doctor : competentDoctors) {
 				Activity tmp = null;
 				if (doctor.isOverTime()== true){
@@ -83,8 +93,7 @@ public class ChefSphere {
 			Activity free = patient.getSchedule().findFreeActivityToInsertOtherActivity(weekId, dayId, start, end);
 
 			free.insert(consultationForPatient); //and when inserted, consultationForPatient's block is the one of free
-			System.out.println("consultation : "+consultationForPatient.getDate()+" pour ce patient "+patient.getId()+" avec prio  "+patient.getPriority());
-			patient.getPlannedStepsPreTreatment().add(best);
+//			System.out.println("consultation : "+consultationForPatient.getDate()+" pour ce patient "+patient.getId()+" avec prio  "+patient.getPriority());
 		}
 		else{
 			System.out.println("A consultation could not be found for a patient : "+patient.getId()+", "+patient.getPriority());

@@ -10,23 +10,21 @@ public class ArrivalConsultation extends ActivityEvent{
 	
 	public ArrivalConsultation() {
 		super();
+		this.priority=0;
 	}
 
 	@Override
 	public void childActions() {
-		// TODO Auto-generated method stub
-		/*
-		 * Display some data in console to check
-		 */
 		int time = Time.time();
 		int min = Time.minIntoTheDay(time);
 		Patient patient = (Patient) this.getSchedule().getiSchedule();
-		System.out.println("Patient id : "+patient.getId()+ " with priority "+patient.getPriority()+" arrived, at min : "+min);
+		System.out.println("Arrival Consultation ; Patient id : "+patient.getId()+ " with priority "+patient.getPriority()+" arrived, at min : "+min+", with doctor id : "+patient.getDoctor().getId());
 		if(patient.getSteps().size()!=0){
 			System.out.println("Arrival for more than consultation !");
 		}
 		
 		if (this.getLateness()>0 && this.getLateness()!= Integer.MAX_VALUE){
+			System.out.println("late arrival");
 			patient.getSphere().getChefSphere().delayConsultation(patient);
 			
 		}
@@ -36,7 +34,9 @@ public class ArrivalConsultation extends ActivityEvent{
 
 	@Override
 	public ActivityEvent clone() {
-		return new ArrivalConsultation();
+		ArrivalConsultation clone = new ArrivalConsultation();
+		clone.setActivity(this.getActivity());
+		return clone;
 	}
 
 	@Override

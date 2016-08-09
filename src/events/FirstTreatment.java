@@ -1,5 +1,6 @@
 package events;
 
+import tools.Time;
 import medical.Patient;
 import medical.TreatmentMachine;
 
@@ -7,22 +8,30 @@ public class FirstTreatment extends ActivityEvent{
 	private Patient patient;
 	
 	public FirstTreatment(Patient patient) {
-		// TODO Auto-generated constructor stub
 		super();
 		this.setPatient(patient);
+		this.setPriority(2);
 	}
 
 	@Override
 	public void childActions() {
-		// TODO Auto-generated method stub
+		TreatmentMachine machine = (TreatmentMachine) this.getiSchedule();
 		if(patient.isPresent()){
-			System.out.println("FirstTreatment");
+			patient.setPresent(false);
+			patient.getSchedule().doNextTask();
+			this.getSchedule().doNextTask();
+			System.out.println("FirstTreatment ; patient id: "+patient.getId()+", prio : "+patient.getPriority()+", with treatmentmachine : "+machine.getId()+", at min : "+Time.minIntoTheDay(Time.time()));
+		}
+		else{
+			System.out.println("FirstTreatment ;	NOT HERE patient id: "+patient.getId()+", prio : "+patient.getPriority()+", with treatmentmachine : "+machine.getId()+", at min : "+Time.minIntoTheDay(Time.time()));
 		}
 	}
 
 	@Override
 	public ActivityEvent clone() {
-		return new FirstTreatment(patient);
+		FirstTreatment clone = new FirstTreatment(patient);
+		clone.setActivity(this.getActivity());
+		return clone;
 	}
 
 	@Override

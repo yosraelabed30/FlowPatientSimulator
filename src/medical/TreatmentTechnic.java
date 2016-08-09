@@ -1,6 +1,7 @@
 package medical;
 
 public enum TreatmentTechnic {
+	TXUroRA(0),
 	TXColonneCK(1),
 	TXColonne3D(2),
 	TXColonneIMRT(3),
@@ -97,8 +98,8 @@ public enum TreatmentTechnic {
 	TXSeinTgPlusAvecBolus(94),
 	TXTrijCK(95),
 	TXUro3D(96),
-	TXUroIMRT(97),
-	TXUroRA(98);
+	TXUroIMRT(97);
+	
 	private int index ;
 	private TreatmentTechnic( int index) {
 		this.index=index;
@@ -112,7 +113,7 @@ public enum TreatmentTechnic {
 		this.index = index;
 	}
 	
-	public static TreatmentTechnic geTreatmentTechnic(int index){
+	public static TreatmentTechnic getTreatmentTechnic(int index){
 		for (TreatmentTechnic treatmentTechnic : TreatmentTechnic.values()) {
 			if (treatmentTechnic.getIndex()==index){
 				return treatmentTechnic;
@@ -123,12 +124,8 @@ public enum TreatmentTechnic {
 	
 	public static TreatmentTechnic generateTreatmentTechnic(){
 		int length = TreatmentTechnic.values().length;
-		int index = (int) (Math.random()*length)+1;
-		TreatmentTechnic treatmentTechnic =geTreatmentTechnic(index);
-		
-		if(treatmentTechnic==null){
-			System.out.println("qsd");
-		}
+		int index = (int) (Math.random()*length);
+		TreatmentTechnic treatmentTechnic =getTreatmentTechnic(index);
 		return treatmentTechnic;
 		
 	}

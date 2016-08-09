@@ -10,6 +10,7 @@ public class Date implements Comparable<Date>{
 	private int weekId;
 	private int dayId;
 	private int minute;
+	public static final Date infinity = new Date(Integer.MAX_VALUE, 6, 24*60-1);
 	
 	public Date(int week, int day, int minute){
 		this.setWeekId(week);
@@ -65,12 +66,11 @@ public class Date implements Comparable<Date>{
 		int toto = this.toMinutes();
 		int lala = d.toMinutes();
 		int res = 0;
-		if (toto < lala) {
+		if (toto < lala || d.equals(Date.infinity)) {
 			res = -1;
-		} else if (toto > lala) {
+		} else if (toto > lala || this.equals(Date.infinity)) {
 			res = 1;
 		}
-
 		return res;
 	}
 
@@ -171,7 +171,12 @@ public class Date implements Comparable<Date>{
 		return date;
 	}
 
+	public boolean sameWeekAndDayAs(Date date){
+		return this.getWeekId() == date.getWeekId() && this.getDayId() == date.getDayId();
+	}
 	
-
+	public Date clone(){
+		return new Date(this.getWeekId(), this.getDayId(), this.getMinute());
+	}
 
 }

@@ -17,37 +17,36 @@ public class CTSim extends ActivityEvent{
 		super();
 		this.patient = patient;
 		this.setSameDayAsConsultation(false);
+		this.setPriority(2); // set to 2 only to see in the console that this event is after the arrivalCTSim
 	}
 	
 	@Override
 	public void childActions() {
-		System.out.println("CTSim for patient : "+patient.getId()+", at minute : "+Time.minIntoTheDay(Time.time()));
-//		if(!patient.isCurative() && sameDayAsConsultation){
-//			//then the patient's folder is considered as processed
-//		}
-//		else{
-//			patient.getDoctor().getFolders().add(patient);
-//		}
-		if(patient.isMoldNeeded()){
-			//TODO something? maybe the duration of the CTSim vary
-		}
-		else{
+		if(patient.isPresent()){
+			System.out.println("CTSim : patient : "+patient.getId()+", priority : "+patient.getPriority()+", at minute : "+Time.minIntoTheDay(Time.time()));
+			patient.setPresent(false);
+			patient.getSchedule().doNextTask();
+			this.getSchedule().doNextTask();
 			
+			/*
+			 * TODO the patient's file is added to the stack of a technologist to do the pre-contouring, but only if it is the last scan of the day actually
+			 */
+			//patient.getCenter().getTechnologist().getFilesForPreContouring().add(patient);
 		}
-		
-		/*
-		 * TODO the patient's file is added to the stack of a technologist to do the pre-contouring
-		 */
-		patient.getCenter().getTechnologist().getFilesForPreContouring().add(patient);
 	}
 
 	@Override
 	public ActivityEvent clone() {
-		return new CTSim(patient, sameDayAsConsultation);
+		CTSim clone = new CTSim(patient, sameDayAsConsultation);
+		clone.setActivity(this.getActivity());
+		return clone;
 	}
 
 	@Override
 	public void generateDelay() {
+		if(patient.isMoldNeeded()){
+			//TODO something? maybe the duration of the CTSim vary
+		}
 		this.setDelay(20);
 	}
 

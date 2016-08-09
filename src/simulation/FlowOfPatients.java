@@ -1,6 +1,7 @@
 package simulation;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedList;
 
 import medical.AdminAgent;
@@ -78,67 +79,7 @@ public class FlowOfPatients {
 	public static void main(String[] args) {
 		double time = System.currentTimeMillis();
 		FlowOfPatients test = new FlowOfPatients();
-
-		for (Cancer cancer : Cancer.values()) {
-			Sphere sphere = new Sphere(test.getCenter(),cancer, null, new ArrayList<Doctor>(), new ArrayList<Patient>());
-			test.getCenter().getSpheres().add(sphere);
-			
-			ArrayList<ArrayList<Block>>blocksTab1 = new ArrayList<ArrayList<Block>>(7);
-			for(int i=0;i<7;i++){
-				ArrayList<Block> blocks1 = new ArrayList<>();
-				blocks1.add(new Block(0, 0, 8*60, BlockType.NotWorking));
-				blocks1.add(new Block(1, 8*60, 17*60, BlockType.Consultation));
-				blocks1.add(new Block(2, 17*60+1, 24*60-1, BlockType.NotWorking));
-				blocksTab1.add(blocks1);
-			}
-			ArrayList<Sphere> sphereDoctor = new ArrayList<>();
-			sphereDoctor.add(sphere);
-			Doctor doc1 = new Doctor(blocksTab1, sphereDoctor, test.getCenter());
-			sphere.getDoctors().add(doc1);
-			test.getCenter().getDoctors().add(doc1);
-			
-			ChefSphere chef = new ChefSphere(sphere);
-			sphere.setChefSphere(chef);
-			test.getCenter().getChefSpheres().add(chef);
-		}
-		
-		
-		ArrayList<ArrayList<Block>>blocksTab3 = new ArrayList<ArrayList<Block>>(7);
-		ArrayList<ArrayList<Block>>blocksTab4 = new ArrayList<ArrayList<Block>>(7);
-		for(int i=0;i<7;i++){
-			ArrayList<Block> blocks1 = new ArrayList<>();
-			ArrayList<Block> blocks2 = new ArrayList<>();
-			blocks1.add(new Block(0, 7*60, 18*60, BlockType.Treatment));
-			blocks2.add(new Block(0, 7*60, 18*60, BlockType.Treatment));
-			blocksTab3.add(blocks1);
-			blocksTab4.add(blocks2);
-		}
-		ArrayList <TreatmentTechnic> treatmentTechnic1 = new ArrayList<>();
-		treatmentTechnic1.add(TreatmentTechnic.TX07213D);
-		treatmentTechnic1.add(TreatmentTechnic.TX0721IMRT);
-		ArrayList <TreatmentTechnic> treatmentTechnic2 = new ArrayList<>();
-		treatmentTechnic2.add(TreatmentTechnic.TX0721IMRT);
-		treatmentTechnic2.add(TreatmentTechnic.TX2053D);
-		test.getCenter().getTreatmentMachines().add(new TreatmentMachine(test.getCenter(), treatmentTechnic1, blocksTab3));
-		test.getCenter().getTreatmentMachines().add(new TreatmentMachine(test.getCenter(), treatmentTechnic2, blocksTab4));
-		
-		ArrayList<ArrayList<Block>>blocksTab5 = new ArrayList<ArrayList<Block>>(7);
-		ArrayList<ArrayList<Block>>blocksTab6 = new ArrayList<ArrayList<Block>>(7);
-		for(int i=0;i<7;i++){
-			ArrayList<Block> blocks1 = new ArrayList<>();
-			ArrayList<Block> blocks2 = new ArrayList<>();
-			blocks1.add(new Block(0, 8*60, 17*60, BlockType.Scan));
-			blocks2.add(new Block(0, 8*60, 17*60, BlockType.Scan));
-			blocksTab5.add(blocks1);
-			blocksTab6.add(blocks2);
-		}
-		test.getCenter().getCtscans().add(new Scan(test.getCenter(), true, ScanTechnic.CTScan3D, blocksTab5));
-		test.getCenter().getCtscans().add(new Scan(test.getCenter(), true, ScanTechnic.CTScan4D, blocksTab6));
-		
-		test.getCenter().setAdminAgent(new AdminAgent(test.getCenter()));
-		test.getCenter().setTechnologist(new Technologist(test.getCenter()));
-		
-		
+		test.setCenter(test.CHUM());
 //		test.simulateOneRun(525600*2);
 //		test.simulateOneRun(525600);
 //		test.simulateOneRun(288000);
@@ -169,6 +110,72 @@ public class FlowOfPatients {
 		this.center = center;
 	}
 
+	public Center CHUM(){
+		Center chum = new Center();
+		for (Cancer cancer : Cancer.values()) {
+			Sphere sphere = new Sphere(chum,cancer, null, new ArrayList<Doctor>(), new ArrayList<Patient>());
+			chum.getSpheres().add(sphere);
+			
+			ArrayList<ArrayList<Block>>blocksTab1 = new ArrayList<ArrayList<Block>>(7);
+			for(int i=0;i<7;i++){
+				ArrayList<Block> blocks1 = new ArrayList<>();
+				blocks1.add(new Block(0, 0, 8*60, BlockType.NotWorking));
+				blocks1.add(new Block(1, 8*60, 17*60, BlockType.Consultation));
+				blocks1.add(new Block(2, 17*60+1, 24*60-1, BlockType.NotWorking));
+				blocksTab1.add(blocks1);
+			}
+			ArrayList<Sphere> sphereDoctor = new ArrayList<>();
+			sphereDoctor.add(sphere);
+			Doctor doc1 = new Doctor(blocksTab1, sphereDoctor, chum);
+			sphere.getDoctors().add(doc1);
+			chum.getDoctors().add(doc1);
+			
+			ChefSphere chef = new ChefSphere(sphere);
+			sphere.setChefSphere(chef);
+			chum.getChefSpheres().add(chef);
+		}
+		
+		ArrayList<ArrayList<Block>>blocksTab3 = new ArrayList<ArrayList<Block>>(7);
+		ArrayList<ArrayList<Block>>blocksTab4 = new ArrayList<ArrayList<Block>>(7);
+		for(int i=0;i<7;i++){
+			ArrayList<Block> blocks1 = new ArrayList<>();
+			ArrayList<Block> blocks2 = new ArrayList<>();
+			blocks1.add(new Block(0, 7*60, 16*60, BlockType.Treatment));
+			blocks1.add(new Block(1, 16*60, 18*60, BlockType.Reserved));
+			blocks2.add(new Block(0, 7*60, 16*60, BlockType.Treatment));
+			blocks2.add(new Block(1, 16*60, 18*60, BlockType.Reserved));
+			blocksTab3.add(blocks1);
+			blocksTab4.add(blocks2);
+		}
+		ArrayList <TreatmentTechnic> treatmentTechnic1 = new ArrayList<>();
+//		treatmentTechnic1.add(TreatmentTechnic.TX07213D);
+//		treatmentTechnic1.add(TreatmentTechnic.TX0721IMRT);
+		treatmentTechnic1.addAll(new ArrayList<TreatmentTechnic>(Arrays.asList(TreatmentTechnic.values())));
+		ArrayList <TreatmentTechnic> treatmentTechnic2 = new ArrayList<>();
+//		treatmentTechnic2.add(TreatmentTechnic.TX0721IMRT);
+//		treatmentTechnic2.add(TreatmentTechnic.TX2053D);
+		treatmentTechnic2.addAll(new ArrayList<TreatmentTechnic>(Arrays.asList(TreatmentTechnic.values())));
+		chum.getTreatmentMachines().add(new TreatmentMachine(chum, treatmentTechnic1, blocksTab3));
+		chum.getTreatmentMachines().add(new TreatmentMachine(chum, treatmentTechnic2, blocksTab4));
+		
+		ScanTechnic[] scanTechnics = ScanTechnic.values();
+		for (ScanTechnic scanTechnic : scanTechnics) {
+			ArrayList<ArrayList<Block>>blocksTab5 = new ArrayList<ArrayList<Block>>(7);
+			for(int i=0;i<7;i++){
+				ArrayList<Block> blocks1 = new ArrayList<>();
+				blocks1.add(new Block(0, 8*60, 15*60, BlockType.Scan));
+				blocks1.add(new Block(1, 15*60, 17*60, BlockType.Reserved));
+				blocksTab5.add(blocks1);
+			}
+			chum.getCtscans().add(new Scan(chum, true, scanTechnic, blocksTab5));
+		}
+		
+		chum.setAdminAgent(new AdminAgent(chum));
+		chum.setTechnologist(new Technologist(chum));
+		return chum;
+	}
+
+	
 	class DayStart extends Event {
 
 		public void actions() {
@@ -201,12 +208,9 @@ public class FlowOfPatients {
 			if (date.getWeekId()!=0 || date.getDayId()!=0){
 				for (ChefSphere chefSphere : chefSpheres) {
 					chefSphere.NoShowConsultation(date);
-					System.out.println("le moment de replanification" +Date.dateNow() );
-					
+//					System.out.println("le moment de replanification" +Date.dateNow() );
 				}
-				
 			}
-			
 		}
 
 		private void increaseWeek() {
@@ -238,11 +242,11 @@ public class FlowOfPatients {
 			for (ChefSphere chef : getCenter().getChefSpheres()) {
 				chef.processDemands();
 			}
-			// center.getTechnologist().processPatientFilesForPlanification();
+			center.getTechnologist().processPatientFilesForPlanification();
 
 			getCenter().fromPatientsToPatientsOut();
-			isReadyForTheTreatment(2);
-			isReadyForTheTreatment(1);
+//			isReadyForTheTreatment(2);
+//			isReadyForTheTreatment(1);
 
 		}
 

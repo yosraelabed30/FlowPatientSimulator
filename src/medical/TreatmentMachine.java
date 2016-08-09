@@ -12,7 +12,6 @@ public class TreatmentMachine extends Resource implements ISchedule{
 	static private int treatmentMachineClassId;
 	private int id;
 	private Schedule schedule;
-	
 	private ArrayList < TreatmentTechnic> treatmentTechnics;
 	
 	public TreatmentMachine(Center center, ArrayList < TreatmentTechnic> treatmentTechnics, ArrayList<ArrayList<Block>> blocksTab){

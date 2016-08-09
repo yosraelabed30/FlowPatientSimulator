@@ -132,6 +132,12 @@ public class Center {
 		for(Doctor doctor : doctors){
 			doctor.getSchedule().doNextTask();
 		}
+		for(Scan scan : scans){
+			scan.getSchedule().doNextTask();
+		}
+		for(TreatmentMachine treatmentMachine : treatmentMachines){
+			treatmentMachine.getSchedule().doNextTask();
+		}
 	}
 	
 	/**
@@ -153,6 +159,7 @@ public class Center {
 			treatmentMachine.addWeek(weekId);
 		}
 	}
+
 
 	public int getCenterId() {
 		return centerId;
