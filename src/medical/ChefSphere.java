@@ -89,7 +89,7 @@ public class ChefSphere {
 			arrival.setLateness(lateness);
 			arrival.setPriority(0); //patient arrives first then the presence is checked
 			consultationForPatient.setActivityEvent(arrival);
-			patient.getPlannedSteps().add(consultationForPatient);
+			patient.getPlannedStepsPreTreatment().add(consultationForPatient);
 			Activity free = patient.getSchedule().findFreeActivityToInsertOtherActivity(weekId, dayId, start, end);
 
 			free.insert(consultationForPatient); //and when inserted, consultationForPatient's block is the one of free

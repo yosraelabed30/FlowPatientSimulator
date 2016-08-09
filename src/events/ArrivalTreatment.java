@@ -1,13 +1,16 @@
 package events;
 
 import medical.Patient;
+import medical.TreatmentMachine;
 import tools.Time;
 
 
 public class ArrivalTreatment extends ActivityEvent {
-	public ArrivalTreatment() {
+	private TreatmentMachine treatmentMachine ;
+	public ArrivalTreatment(TreatmentMachine treatmentMachine) {
 		super();
 		this.setPriority(0);
+		this.treatmentMachine = treatmentMachine;
 	}
 	
 	@Override
@@ -21,7 +24,7 @@ public class ArrivalTreatment extends ActivityEvent {
 
 	@Override
 	public ActivityEvent clone() {
-		ArrivalTreatment clone = new ArrivalTreatment();
+		ArrivalTreatment clone = new ArrivalTreatment(this.getTreatmentMachine());
 		clone.setActivity(this.getActivity());
 		return clone;
 	}
@@ -29,6 +32,14 @@ public class ArrivalTreatment extends ActivityEvent {
 	@Override
 	public void generateDelay() {
 		this.delay=0;
+	}
+
+	public TreatmentMachine getTreatmentMachine() {
+		return treatmentMachine;
+	}
+
+	public void setTreatmentMachine(TreatmentMachine treatmentMachine) {
+		this.treatmentMachine = treatmentMachine;
 	}
 
 }

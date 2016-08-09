@@ -10,12 +10,14 @@ import medical.Center;
 import medical.ChefSphere;
 import medical.Doctor;
 import medical.Patient;
+import medical.Priority;
 import medical.ScanTechnic;
 import medical.Sphere;
 import medical.Scan;
 import medical.Technologist;
 import medical.TreatmentMachine;
 import medical.TreatmentTechnic;
+import events.ArrivalTreatment;
 import events.PreConsultation;
 import events.ReferredPatient;
 import events.Treatment;
@@ -245,8 +247,9 @@ public class FlowOfPatients {
 			center.getTechnologist().processPatientFilesForPlanification();
 
 			getCenter().fromPatientsToPatientsOut();
-//			isReadyForTheTreatment(2);
-//			isReadyForTheTreatment(1);
+			
+			isReadyForTheTreatment(2);
+			isReadyForTheTreatment(1);
 
 		}
 
@@ -254,67 +257,28 @@ public class FlowOfPatients {
 
 			LinkedList<Patient> patients = getCenter().getPatients();
 			for (Patient patient : patients) {
-				int duration = 45;
-				Date now = Date.dateNow();
-				Date daysBeforeTheFirstTreatment = now.increase(counter);
-				Date firstTreatment = patient.getPlannedSteps().getFirst().getDate();
-				if (firstTreatment.getWeekId() == daysBeforeTheFirstTreatment.getWeekId()
-						&& firstTreatment.getDayId() == daysBeforeTheFirstTreatment.getDayId()) {
-					Doctor doctor = patient.getDoctor();
-					TreatmentMachine treatmentMachine = (TreatmentMachine) patient.getFirstTreatment().getiSchedule();
-					if (doctor.getFilesForContouring().contains(patient)) {
+				if((patient.getPriority()==Priority.P3 || patient.getPriority()==Priority.P4) && patient.getPlannedStepsTreatments().size()>0){
+					int duration = 45;
+					Date now = Date.dateNow();
+					Date daysBeforeTheFirstTreatment = now.increase(counter);
+					Date firstTreatment = patient.getPlannedStepsTreatments().getFirst().getDate();
+					if (firstTreatment.getWeekId() == daysBeforeTheFirstTreatment.getWeekId()
+							&& firstTreatment.getDayId() == daysBeforeTheFirstTreatment.getDayId()) {
+						Doctor doctor = patient.getDoctor();
+						ArrivalTreatment arrivalTreatment = (ArrivalTreatment) patient.getPlannedStepsTreatments().getFirst().getActivityEvent();
+						TreatmentMachine treatmentMachine = (TreatmentMachine) arrivalTreatment.getTreatmentMachine();
+						if (doctor.getFilesForContouring().contains(patient)) {
 
-						patient.getPlannedSteps().poll();
-						treatmentMachine.getSchedule().getActivityAssociated(firstTreatment).delete();
-						patient.getSchedule().getActivityAssociated(firstTreatment).delete();
-						Date lastTreatment = patient.getPlannedSteps().getLast().getDate();
-						Date newLastTreatment = lastTreatment.increase();
-						Activity best = treatmentMachine.getSchedule()
-								.findFreeActivityToInsertOtherActivity(newLastTreatment, duration);
+							patient.getPlannedStepsTreatments().poll();
+							treatmentMachine.getSchedule().getActivityAssociated(firstTreatment).delete();
+							patient.getSchedule().getActivityAssociated(firstTreatment).delete();
+							Date lastTreatment = patient.getPlannedStepsTreatments().getLast().getDate();
+							Date newLastTreatment = lastTreatment.increase();
+							Activity best = treatmentMachine.getSchedule()
+									.findFreeActivityToInsertOtherActivity(newLastTreatment, duration);
 
-						patient.setFirstTreatment(patient.getPlannedSteps().getFirst());
+							patient.setFirstTreatment(patient.getPlannedStepsTreatments().getFirst());
 
-						if (best != null) {
-							int start = best.getStart();
-							int end = start + duration;
-
-							Treatment treatment = new Treatment(patient);
-							Activity treatmentActivity = new Activity(best.getBlock(), start, end,
-									ActivityType.Treatment, treatment);
-							best.insert(treatmentActivity);
-
-							Activity treatmentActivityPatient = treatmentActivity.clone();
-							Activity free = patient.getSchedule().findFreeActivityToInsertOtherActivity(
-									best.getDate().getWeekId(), best.getDate().getDayId(), start, end);
-							free.insert(treatmentActivityPatient);
-							patient.getPlannedSteps().add(best);
-
-						}
-
-						else {
-							TreatmentTechnic treatmentTechnic = patient.getTreatmentTechnic();
-							ArrayList<TreatmentMachine> treatmentMachines = getCenter().getTreatmentMachines();
-							ArrayList<TreatmentMachine> adequateMachines = null;
-							for (TreatmentMachine treatmentMachine2 : treatmentMachines) {
-								if (treatmentMachine2.getTreatmentTechnics().contains(treatmentTechnic)) {
-									adequateMachines.add(treatmentMachine2);
-								}
-							}
-							for (TreatmentMachine adequateMachine : adequateMachines) {
-								Activity tmp = adequateMachine.getSchedule()
-										.findFreeActivityToInsertOtherActivity(newLastTreatment, duration);
-								if (best == null || tmp.startsEarlierThan(best)) {
-									best = tmp;
-								}
-							}
-							if (best == null) {
-								best = treatmentMachine.getSchedule().getFirstAvailabilityNotWeekend(duration,
-										BlockType.Treatment, patient.getPlannedSteps().getFirst().getDate().getWeekId(),
-										patient.getPlannedSteps().getFirst().getDate().getDayId(),
-										patient.getPlannedSteps().getFirst().getDate().getMinute(),
-										patient.getPlannedSteps().getFirst().getDate().getWeekId(),
-										patient.getPlannedSteps().getFirst().getDate().getDayId(), 18 * 60);
-							}
 							if (best != null) {
 								int start = best.getStart();
 								int end = start + duration;
@@ -328,22 +292,55 @@ public class FlowOfPatients {
 								Activity free = patient.getSchedule().findFreeActivityToInsertOtherActivity(
 										best.getDate().getWeekId(), best.getDate().getDayId(), start, end);
 								free.insert(treatmentActivityPatient);
-								patient.getPlannedSteps().add(best);
+								patient.getPlannedStepsTreatments().add(best);
 
 							}
 
+							else {
+								TreatmentTechnic treatmentTechnic = patient.getTreatmentTechnic();
+								ArrayList<TreatmentMachine> treatmentMachines = getCenter().getTreatmentMachines();
+								ArrayList<TreatmentMachine> adequateMachines = null;
+								for (TreatmentMachine treatmentMachine2 : treatmentMachines) {
+									if (treatmentMachine2.getTreatmentTechnics().contains(treatmentTechnic)) {
+										adequateMachines.add(treatmentMachine2);
+									}
+								}
+								for (TreatmentMachine adequateMachine : adequateMachines) {
+									Activity tmp = adequateMachine.getSchedule()
+											.findFreeActivityToInsertOtherActivity(newLastTreatment, duration);
+									if (best == null || tmp.startsEarlierThan(best)) {
+										best = tmp;
+									}
+								}
+								if (best == null) {
+									best = treatmentMachine.getSchedule().getFirstAvailabilityNotWeekend(duration,
+											BlockType.Treatment, patient.getPlannedStepsTreatments().getFirst().getDate().getWeekId(),
+											patient.getPlannedStepsTreatments().getFirst().getDate().getDayId(),
+											patient.getPlannedStepsTreatments().getFirst().getDate().getMinute(),
+											patient.getPlannedStepsTreatments().getFirst().getDate().getWeekId(),
+											patient.getPlannedStepsTreatments().getFirst().getDate().getDayId(), 18 * 60);
+								}
+								if (best != null) {
+									int start = best.getStart();
+									int end = start + duration;
+
+									Treatment treatment = new Treatment(patient);
+									Activity treatmentActivity = new Activity(best.getBlock(), start, end,
+											ActivityType.Treatment, treatment);
+									best.insert(treatmentActivity);
+
+									Activity treatmentActivityPatient = treatmentActivity.clone();
+									Activity free = patient.getSchedule().findFreeActivityToInsertOtherActivity(
+											best.getDate().getWeekId(), best.getDate().getDayId(), start, end);
+									free.insert(treatmentActivityPatient);
+									patient.getPlannedStepsTreatments().add(best);
+								}
+							}
 						}
-
 					}
-
 				}
-
-			}
-
-			
+			}	
 		}
-	
-
 	}
 
 	class EndOfSim extends Event {

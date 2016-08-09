@@ -160,7 +160,7 @@ public class Patient  implements ISchedule{
 				this.sphere=sphere;
 			}
 		}
-		this.plannedStepsTreatments = new LinkedList();
+		this.setPlannedStepsTreatments(new LinkedList());
 		this.plannedStepsPreTreatment =new LinkedList();
 		this.steps = new ArrayList<>();
 		this.inCenter=true;
@@ -452,19 +452,9 @@ public class Patient  implements ISchedule{
 		return businessDays;
 	}
 
-	public LinkedList <Activity> getPlannedSteps() {
-		return plannedStepsTreatments;
-	}
 
-	public void setPlannedSteps(LinkedList <Activity> plannedSteps) {
-		this.plannedStepsTreatments = plannedSteps;
-	}
 	
-	public Activity getLastPlannedStep(){
-		int size= this.getPlannedSteps().size();
-		Activity lastPlannedStep= this.getPlannedSteps().get(size-1);
-		return lastPlannedStep;
-	}
+
 
 	public boolean isInCenter() {
 		return inCenter;
@@ -504,6 +494,14 @@ public class Patient  implements ISchedule{
 
 	public void setPlannedStepsPreTreatment(LinkedList<Activity> plannedStepsPreTreatment) {
 		this.plannedStepsPreTreatment = plannedStepsPreTreatment;
+	}
+
+	public LinkedList<Activity> getPlannedStepsTreatments() {
+		return plannedStepsTreatments;
+	}
+
+	public void setPlannedStepsTreatments(LinkedList<Activity> plannedStepsTreatments) {
+		this.plannedStepsTreatments = plannedStepsTreatments;
 	}
 
 

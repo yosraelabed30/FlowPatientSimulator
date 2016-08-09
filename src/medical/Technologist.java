@@ -176,7 +176,7 @@ public class Technologist extends Resource implements ISchedule{
 		boolean scheduled = false;
 		boolean planned = false;
 		ArrayList<TreatmentMachine> adequateMachine = new ArrayList<>();
-		Activity best = patient.getLastPlannedStep();
+		Activity best = patient.getPlannedStepsTreatments().getLast();
 		Date date = best.getDate().increase();
 		TreatmentMachine machine = (TreatmentMachine) best.getiSchedule();
 		for (TreatmentMachine treatmentMachine : this.getCenter().getTreatmentMachines()) {
@@ -324,14 +324,17 @@ public class Technologist extends Resource implements ISchedule{
 			System.out.println("Patient can be treated on time <-----------------------");
 			Activity freeForFirstTreatment = patient.getSchedule().findFreeActivityToInsertOtherActivity(firstTreatmentForMachine.getDate(), firstTreatmentForMachine.duration());
 			Activity firstTreatmentForPatient = firstTreatmentForMachine.clone();
-			firstTreatmentForPatient.setActivityEvent(new ArrivalTreatment());
+			TreatmentMachine treatmentMachine = (TreatmentMachine) firstTreatmentForMachine.getiSchedule();
+			firstTreatmentForPatient.setActivityEvent(new ArrivalTreatment(treatmentMachine));
 			freeForFirstTreatment.insert(firstTreatmentForPatient);
+			patient.getPlannedStepsTreatments().add(firstTreatmentForPatient);
 			
 			for (Activity ctSimForScan : CTSims) {
 				Activity freeForCTSim = patient.getSchedule().findFreeActivityToInsertOtherActivity(ctSimForScan.getDate(), ctSimForScan.duration());
 				Activity ctSimForPatient = ctSimForScan.clone();
 				ctSimForPatient.setActivityEvent(new ArrivalCTSim());
 				freeForCTSim.insert(ctSimForPatient);
+				patient.getPlannedStepsPreTreatment().add(ctSimForPatient);
 			}
 			
 			//only remains to program the other treatments
@@ -391,12 +394,14 @@ public class Technologist extends Resource implements ISchedule{
 			Activity treatmentForMachine= new Activity(start, duration, ActivityType.Treatment, new Treatment (patient));
 			freeActMachine.insert(treatmentForMachine);
 			Activity treatmentForPatient = treatmentForMachine.clone();
-			treatmentForPatient.setActivityEvent(new ArrivalTreatment());
+			TreatmentMachine treatmentMachine = (TreatmentMachine) treatmentForMachine.getiSchedule();
+			treatmentForPatient.setActivityEvent(new ArrivalTreatment(treatmentMachine));
 			Activity freeActPatient = patient.getSchedule().findFreeActivityToInsertOtherActivity(treatmentForPatient.getDate(), duration);
 			if(freeActPatient==null){
 				System.out.println("");
 			}
 			freeActPatient.insert(treatmentForPatient);
+			patient.getPlannedStepsTreatments().add(treatmentForPatient);
 		}
 	}
 
