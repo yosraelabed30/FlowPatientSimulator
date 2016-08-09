@@ -9,6 +9,8 @@ import scheduling.Week;
 
 
 public class TreatmentMachine extends Resource implements ISchedule{
+	static private int treatmentMachineClassId;
+	private int id;
 	private Schedule schedule;
 	
 	private ArrayList < TreatmentTechnic> treatmentTechnics;
@@ -44,6 +46,14 @@ public class TreatmentMachine extends Resource implements ISchedule{
 
 	public void setTreatmentTechnics(ArrayList < TreatmentTechnic> treatmentTechnics) {
 		this.treatmentTechnics = treatmentTechnics;
+	}
+
+	public int getId() {
+		return id;
+	}
+
+	public void setId(int id) {
+		this.id = id;
 	}
 
 }
