@@ -27,8 +27,8 @@ public class PreConsultation extends ActivityEvent{
 		System.out.println("PreConsultation : checking if patient id : "+getPatient().getId()+" with priority "+getPatient().getPriority()+" is present : "+getPatient().isPresent()+", at min : "+min+", with doctor id : "+getPatient().getDoctor().getId());
 		if(getPatient().isPresent()){
 			//schedule the pre-consultation event
+			getPatient().getSteps().add(this.getActivity());
 			new Consultation(this.patient).schedule(0);
-			getPatient().getSteps().add(getActivity());
 		}
 		else{
 			getActivity().setStatus(ActivityStatus.ToPostpone);

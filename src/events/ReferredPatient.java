@@ -4,6 +4,7 @@ import medical.Center;
 import medical.ChefSphere;
 import medical.Patient;
 import medical.Priority;
+import scheduling.Date;
 import tools.Time;
 import umontreal.iro.lecuyer.randvar.RandomVariateGen;
 
@@ -27,6 +28,7 @@ public class ReferredPatient extends ActivityEvent{
 		Patient patient = new Patient(center);
 		center.getPatients().add(patient);
 		System.out.println("Referred patient ; patient id : "+patient.getId()+" with prio : "+patient.getPriority()+", min : "+Time.minIntoTheDay(Time.time()));
+		patient.setReferredDate(Date.dateNow());
 		if(patient.getPriority() == Priority.P1 || patient.getPriority() == Priority.P2  ){
 			for (ChefSphere chef : center.getChefSpheres()) {
 				/*

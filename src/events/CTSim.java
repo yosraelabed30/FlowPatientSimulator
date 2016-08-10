@@ -28,6 +28,7 @@ public class CTSim extends ActivityEvent{
 	public void childActions() {
 		if(patient.isPresent()){
 			System.out.println("CTSim : patient : "+patient.getId()+", priority : "+patient.getPriority()+", at minute : "+Time.minIntoTheDay(Time.time()));
+			patient.getSteps().add(this.getActivity());
 			if(last){
 				Technologist.getFilesForPreContouring().add(patient);
 				System.out.println("file has been transfered to the technologists");

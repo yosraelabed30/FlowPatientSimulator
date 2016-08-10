@@ -17,6 +17,7 @@ public class FirstTreatment extends ActivityEvent{
 	public void childActions() {
 		TreatmentMachine machine = (TreatmentMachine) this.getiSchedule();
 		if(patient.isPresent()){
+			patient.getSteps().add(this.getActivity());
 			patient.setPresent(false);
 			patient.getSchedule().doNextTask();
 			this.getSchedule().doNextTask();

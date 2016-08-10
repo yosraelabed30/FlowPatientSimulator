@@ -6,6 +6,7 @@ import java.util.LinkedList;
 import javax.swing.event.SwingPropertyChangeSupport;
 
 import scheduling.Activity;
+import scheduling.ActivityType;
 import scheduling.Block;
 import scheduling.BlockType;
 import scheduling.Date;
@@ -87,7 +88,7 @@ public class Patient  implements ISchedule{
 	private int nbTreatments;
 	private boolean inCenter;
 	private Schedule schedule;
-	private ArrayList<Activity> steps;
+	private LinkedList<Activity> steps;
 	private LinkedList<Activity> plannedStepsTreatments;
 	private LinkedList<Activity> plannedStepsPreTreatment;
 	private Date referredDate;
@@ -112,7 +113,7 @@ public class Patient  implements ISchedule{
 		this.curative = Math.random()>0.5 ? true : false;
 		this.arrivalDay = -10;
 		this.arrivalMinutes =-10;
-		this.steps = new ArrayList<>();
+		this.steps = new LinkedList<>();
 	
 		this.doctor = null;
 		this.setNextActivity(null);
@@ -162,7 +163,7 @@ public class Patient  implements ISchedule{
 		}
 		this.setPlannedStepsTreatments(new LinkedList());
 		this.plannedStepsPreTreatment =new LinkedList();
-		this.steps = new ArrayList<>();
+		this.steps = new LinkedList<>();
 		this.inCenter=true;
 		this.firstTreatment=firstTreatment;
 	
@@ -387,7 +388,7 @@ public class Patient  implements ISchedule{
 		this.schedule = schedule;
 	}
 
-	public ArrayList<Activity> getSteps() {
+	public LinkedList<Activity> getSteps() {
 		return steps;
 	}
 	
@@ -397,7 +398,7 @@ public class Patient  implements ISchedule{
 
 	}
 
-	public void setSteps(ArrayList<Activity> steps) {
+	public void setSteps(LinkedList<Activity> steps) {
 		this.steps = steps;
 	}
 
@@ -504,5 +505,21 @@ public class Patient  implements ISchedule{
 		this.plannedStepsTreatments = plannedStepsTreatments;
 	}
 
+	public String toString(){
+		String s = "Patient id : "+this.getId()+", priority : "+this.getPriority()+" ";
+		s+="\n	Referred, "+this.getReferredDate();
+		
+		int nbMin=-1;
+		boolean firstTreatment = true;
+		for (Activity activity : this.getSteps()) {
+			s+="\n	"+activity.getType()+", "+activity.getDate();
+			if(activity.getType()==ActivityType.Treatment && firstTreatment){
+				firstTreatment=false;
+				nbMin = activity.getDate().toMinutes()-this.getReferredDate().toMinutes();
+			}
+		}
 
+		s+="\n		 Duration between the consultation and the first treatment : "+Date.toDates(nbMin);
+		return s;
+	}
 }

@@ -297,14 +297,14 @@ public class Technologist implements ISchedule{
 			else if(dateFirstTreatment.compareTo(deadLine) >=0 && relaxingConstraintFirstTreatmentCTSim){ // we found a first treatment, for the machine, but it is not before the deadline and we already relaxed
 				firstTreatmentForMachine.delete();
 				firstTreatmentForMachine=null;
-				System.out.println("-------------------> BOUHOUHOU patient cannot be treated on time, we do not treat him... (for now)");
+				System.out.println("------------------->  patient id : "+patient.getId()+", with priority : "+patient.getPriority()+" cannot be treated on time, we do not treat him... (for now)");
 				couldBePlannedOnTime=false;
 				break;
 			}
 		}
 		
 		if(couldBePlannedOnTime){
-			System.out.println("Patient can be treated on time <-----------------------");
+			System.out.println("Patient can be treated on time <----------------------- patient id : "+patient.getId()+", with priority : "+patient.getPriority());
 			Activity freeForFirstTreatment = patient.getSchedule().findFreeActivityToInsertOtherActivity(firstTreatmentForMachine.getDate(), firstTreatmentForMachine.duration());
 			Activity firstTreatmentForPatient = firstTreatmentForMachine.clone();
 			TreatmentMachine treatmentMachine = (TreatmentMachine) firstTreatmentForMachine.getiSchedule();
@@ -374,15 +374,16 @@ public class Technologist implements ISchedule{
 				}
 
 			}
-			Activity treatmentForMachine= new Activity(start, duration, ActivityType.Treatment, new Treatment (patient));
+			Treatment treatmentEvent = new Treatment (patient);
+			Activity treatmentForMachine= new Activity(start, duration, ActivityType.Treatment, treatmentEvent);
+			if(i==patient.getNbTreatments()-1){
+				treatmentEvent.setLast(true);
+			}
 			freeActMachine.insert(treatmentForMachine);
 			Activity treatmentForPatient = treatmentForMachine.clone();
 			TreatmentMachine treatmentMachine = (TreatmentMachine) treatmentForMachine.getiSchedule();
 			treatmentForPatient.setActivityEvent(new ArrivalTreatment(treatmentMachine));
 			Activity freeActPatient = patient.getSchedule().findFreeActivityToInsertOtherActivity(treatmentForPatient.getDate(), duration);
-			if(freeActPatient==null){
-				System.out.println("");
-			}
 			freeActPatient.insert(treatmentForPatient);
 			patient.getPlannedStepsTreatments().add(treatmentForPatient);
 		}

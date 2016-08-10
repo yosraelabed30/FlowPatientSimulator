@@ -68,6 +68,9 @@ public class FlowOfPatients {
 	 */
 	public Center center;
 	
+	public static Patient test1=null;
+	public static Patient test2=null;
+	
 	/**
 	 * Constructor initiating the day of the week to -1, since it is immediately increased
 	 * {@link #genReferredPatient} is instanciated with an ExponentialGen, see Taobane memoire for more info
@@ -91,12 +94,22 @@ public class FlowOfPatients {
 //		test.simulateOneRun(525600*2);
 //		test.simulateOneRun(525600);
 //		test.simulateOneRun(288000);
-//		test.simulateOneRun(100000);
-		test.simulateOneRun(30000);
+		test.simulateOneRun(100000);
+//		test.simulateOneRun(30000);
 //		test.simulateOneRun(72*60);
 		
 		time = System.currentTimeMillis()-time;
 		System.out.println("time : "+time);
+		
+		int nbPatientTreated = test.getCenter().getPatientsOut().size();
+		int nbPatientNotYetTreated = test.getCenter().getPatients().size();
+		System.out.println("\nNumber of patient treated : "+nbPatientTreated+", out of "+(nbPatientNotYetTreated+nbPatientTreated)+" referred");
+		if(test1!=null){
+			System.out.println("\n"+test1);
+		}
+		if(test2!=null){
+			System.out.println("\n"+test2);
+		}
 	}
 
 	/**
@@ -124,82 +137,78 @@ public class FlowOfPatients {
 			Sphere sphere = new Sphere(chum,cancer, null, new ArrayList<Doctor>(), new ArrayList<Patient>());
 			chum.getSpheres().add(sphere);
 			
-			ArrayList<ArrayList<Block>>blocksTab1 = new ArrayList<ArrayList<Block>>(7);
+			ArrayList<ArrayList<Block>>blocksTab = new ArrayList<ArrayList<Block>>(7);
 			for(int i=0;i<7;i++){
-				ArrayList<Block> blocks1 = new ArrayList<>();
-				blocks1.add(new Block(0, 0, 8*60, BlockType.NotWorking));
-				blocks1.add(new Block(1, 8*60, 17*60, BlockType.Consultation));
+				ArrayList<Block> blocks = new ArrayList<>();
+				blocks.add(new Block(0, 0, 8*60, BlockType.NotWorking));
+				blocks.add(new Block(1, 8*60, 17*60, BlockType.Consultation));
 				Block contouringBlock = new Block(2, 17*60, 19*60, BlockType.Contouring);
 				Activity contouringActivity = contouringBlock.getActivities().get(0);
 				contouringActivity.setType(ActivityType.Contouring);
 				contouringActivity.setActivityEvent(new Contouring());
-				blocks1.add(contouringBlock);
+				blocks.add(contouringBlock);
 				Block treatmentPlanBlock = new Block(3, 19*60, 20*60, BlockType.TreatmentPlan);
 				Activity treatmentPlanActivity = treatmentPlanBlock.getActivities().get(0);
 				treatmentPlanActivity.setType(ActivityType.TreatmentPlan);
 				treatmentPlanActivity.setActivityEvent(new TreatmentPlan());
-				blocks1.add(treatmentPlanBlock);
-				blocks1.add(new Block(4, 20*60, 24*60, BlockType.NotWorking));
-				blocksTab1.add(blocks1);
+				blocks.add(treatmentPlanBlock);
+				blocks.add(new Block(4, 20*60, 24*60, BlockType.NotWorking));
+				blocksTab.add(blocks);
 			}
 			ArrayList<Sphere> sphereDoctor = new ArrayList<>();
 			sphereDoctor.add(sphere);
-			Doctor doc1 = new Doctor(blocksTab1, sphereDoctor, chum);
-			sphere.getDoctors().add(doc1);
-			chum.getDoctors().add(doc1);
+			Doctor doc = new Doctor(blocksTab, sphereDoctor, chum);
+			sphere.getDoctors().add(doc);
+			chum.getDoctors().add(doc);
 			
 			ChefSphere chef = new ChefSphere(sphere);
 			sphere.setChefSphere(chef);
 			chum.getChefSpheres().add(chef);
 		}
 		
-		ArrayList<ArrayList<Block>>blocksTab3 = new ArrayList<ArrayList<Block>>(7);
-		ArrayList<ArrayList<Block>>blocksTab4 = new ArrayList<ArrayList<Block>>(7);
-		for(int i=0;i<7;i++){
-			ArrayList<Block> blocks1 = new ArrayList<>();
-			ArrayList<Block> blocks2 = new ArrayList<>();
-			blocks1.add(new Block(0, 7*60, 16*60, BlockType.Treatment));
-			blocks1.add(new Block(1, 16*60, 18*60, BlockType.Reserved));
-			blocks2.add(new Block(0, 7*60, 16*60, BlockType.Treatment));
-			blocks2.add(new Block(1, 16*60, 18*60, BlockType.Reserved));
-			blocksTab3.add(blocks1);
-			blocksTab4.add(blocks2);
+		int nbTreatmentMachines=30;
+		for(int i=0 ; i<nbTreatmentMachines ; i++){
+			ArrayList<ArrayList<Block>>blocksTab = new ArrayList<ArrayList<Block>>(7);
+			for(int j=0;j<7;j++){
+				ArrayList<Block> blocks = new ArrayList<>();
+				blocks.add(new Block(0, 7*60, 16*60, BlockType.Treatment));
+				blocks.add(new Block(1, 16*60, 18*60, BlockType.Reserved));
+				blocksTab.add(blocks);
+			}
+			ArrayList <TreatmentTechnic> treatmentTechnics = new ArrayList<>();
+			treatmentTechnics.addAll(new ArrayList<TreatmentTechnic>(Arrays.asList(TreatmentTechnic.values())));
+			chum.getTreatmentMachines().add(new TreatmentMachine(chum, treatmentTechnics, blocksTab));
 		}
-		ArrayList <TreatmentTechnic> treatmentTechnic1 = new ArrayList<>();
-//		treatmentTechnic1.add(TreatmentTechnic.TX07213D);
-//		treatmentTechnic1.add(TreatmentTechnic.TX0721IMRT);
-		treatmentTechnic1.addAll(new ArrayList<TreatmentTechnic>(Arrays.asList(TreatmentTechnic.values())));
-		ArrayList <TreatmentTechnic> treatmentTechnic2 = new ArrayList<>();
-//		treatmentTechnic2.add(TreatmentTechnic.TX0721IMRT);
-//		treatmentTechnic2.add(TreatmentTechnic.TX2053D);
-		treatmentTechnic2.addAll(new ArrayList<TreatmentTechnic>(Arrays.asList(TreatmentTechnic.values())));
-		chum.getTreatmentMachines().add(new TreatmentMachine(chum, treatmentTechnic1, blocksTab3));
-		chum.getTreatmentMachines().add(new TreatmentMachine(chum, treatmentTechnic2, blocksTab4));
 		
 		ScanTechnic[] scanTechnics = ScanTechnic.values();
 		for (ScanTechnic scanTechnic : scanTechnics) {
-			ArrayList<ArrayList<Block>>blocksTab5 = new ArrayList<ArrayList<Block>>(7);
-			for(int i=0;i<7;i++){
-				ArrayList<Block> blocks1 = new ArrayList<>();
-				blocks1.add(new Block(0, 8*60, 15*60, BlockType.Scan));
-				blocks1.add(new Block(1, 15*60, 17*60, BlockType.Reserved));
-				blocksTab5.add(blocks1);
+			for(int j=0;j<4;j++){
+				ArrayList<ArrayList<Block>>blocksTab = new ArrayList<ArrayList<Block>>(7);
+				for(int i=0;i<7;i++){
+					ArrayList<Block> blocks = new ArrayList<>();
+					blocks.add(new Block(0, 8*60, 15*60, BlockType.Scan));
+					blocks.add(new Block(1, 15*60, 17*60, BlockType.Reserved));
+					blocksTab.add(blocks);
+				}
+				chum.getCtscans().add(new Scan(chum, true, scanTechnic, blocksTab));
 			}
-			chum.getCtscans().add(new Scan(chum, true, scanTechnic, blocksTab5));
 		}
 		
-		ArrayList<ArrayList<Block>>blocksTab6 = new ArrayList<ArrayList<Block>>(7);
-		for(int i=0;i<7;i++){
-			ArrayList<Block> blocks6 = new ArrayList<>();
-			Block dosiBlock = new Block(0, 8*60, 17*60, BlockType.Dosimetry);
-			Activity dosiActivity = dosiBlock.getActivities().get(0);
-			dosiActivity.setType(ActivityType.Dosimetry);
-			dosiActivity.setActivityEvent(new CalculDosi());
-			blocks6.add(dosiBlock);
-			blocksTab6.add(blocks6);
+		int nbDosimetrists = 2;
+		for(int i=0 ; i<nbDosimetrists ; i++){
+			ArrayList<ArrayList<Block>>blocksTab = new ArrayList<ArrayList<Block>>(7);
+			for(int j=0;j<7;j++){
+				ArrayList<Block> blocks = new ArrayList<>();
+				Block dosiBlock = new Block(0, 8*60, 17*60, BlockType.Dosimetry);
+				Activity dosiActivity = dosiBlock.getActivities().get(0);
+				dosiActivity.setType(ActivityType.Dosimetry);
+				dosiActivity.setActivityEvent(new CalculDosi());
+				blocks.add(dosiBlock);
+				blocksTab.add(blocks);
+			}
+			Dosimetrist dosi = new Dosimetrist(chum, blocksTab);
+			chum.getDosimetrists().add(dosi);
 		}
-		Dosimetrist dosi1 = new Dosimetrist(chum, blocksTab6);
-		chum.getDosimetrists().add(dosi1);
 		
 		chum.setAdminAgent(new AdminAgent(chum));
 		chum.setTechnologist(new Technologist(chum));

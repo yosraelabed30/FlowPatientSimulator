@@ -21,7 +21,7 @@ public class Date implements Comparable<Date>{
 	
 	@Override
 	public String toString() {
-		return "Date [weekId=" + weekId + ", dayId=" + dayId + ", minute=" + minute + "]";
+		return "week=" + weekId + ", day=" + dayId + ", minute=" + minute;
 	}
 
 	public int toMinutes(){

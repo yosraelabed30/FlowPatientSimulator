@@ -23,7 +23,7 @@ public class Week implements Comparable<Week>{
 	 * Array of the 7 days of the week
 	 */
 	private Day[] days;
-	private int quotas=3;
+	private int quotas=13; //TODO change that to 3 for a realistic value (but right now we have more patient referred than in reality)
 	
 	public Week(int weekId, Day[] days){
 		this(null, weekId, days);
