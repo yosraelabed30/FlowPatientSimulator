@@ -67,26 +67,6 @@ public class Technologist extends Resource implements ISchedule{
 		//TODO
 		return true;
 	}
-	
-	/**
-	 * Processing the files should be done before the contouring block of the doctor
-	 * Between the contouring and first treatment max 48 hours, that is checked 48 hours before the first treatment. It 48h before the 1st treatment the contouring
-	 * is not done, then the 1st treatment and others are rescheduled
-	 */
-	public void processPatientFilesForPreContouring(){
-		/*
-		 * Depending on wether or not we model the schedule of a technologist
-		 * we may use the PreContouring event (in the case if it is modeled)
-		 * or just do the processing here of the file otherwise
-		 */
-		Collections.sort(filesForPreContouring, new FileComparator1()); //TODO choose the comparator to use for this step, maybe add an input to the method
-		/*
-		 * The contouring step varies between 0.5 and 2 hours for the doctor
-		 */
-		for (Patient patient : filesForPreContouring) {
-			patient.getDoctor().getFilesForContouring().add(patient);
-		}
-	}
 
 	public static LinkedList<Patient> getFilesForPreContouring() {
 		return filesForPreContouring;
@@ -491,6 +471,9 @@ public class Technologist extends Resource implements ISchedule{
 					}
 					
 					if(!CTSims.contains(null)){
+						Collections.sort(CTSims);
+						CTSim lastCtsim = (CTSim) CTSims.get(CTSims.size()-1).getActivityEvent();
+						lastCtsim.setLast(true);
 						return CTSims;
 					}
 				}
@@ -559,5 +542,17 @@ public class Technologist extends Resource implements ISchedule{
 		}
 	}
 	
+	
+	public void processFileForPreContouring(Patient patient){
+		patient.getDoctor().getFilesForContouring().add(patient);
+	}
+	
+	public void processPatientFilesForPreContouring(){
+		LinkedList<Patient> filesForPreContouring = Technologist.getFilesForPreContouring();
+		for (Patient patient : filesForPreContouring) {
+			processFileForPreContouring(patient);
+		}
+//		System.out.println("preContouring done");
+	}
 }
 

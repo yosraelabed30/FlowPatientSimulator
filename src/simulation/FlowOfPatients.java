@@ -202,6 +202,8 @@ public class FlowOfPatients {
 			System.out.println("\nDayStart");
 			System.out.println("New day in minutes : "+time+" it's a "+dayOfWeek+", of week "+week+" and it is day "+day);
 			
+			getCenter().getTechnologist().processPatientFilesForPreContouring();
+			
 			new DayEnd().schedule(10*60);
 			new ReferredPatient(genReferredPatient, getCenter()).schedule ((int)(genReferredPatient.nextDouble()*60));
 			getCenter().doScheduleToday();

@@ -13,7 +13,6 @@ public class Contouring extends ActivityEvent {
 
 	public Contouring() {
 		super();
-		
 	}
 
 	@Override
@@ -24,24 +23,21 @@ public class Contouring extends ActivityEvent {
 		int numberOfFilesTreated =0;
 		int time = Time.time();
 		int min = Time.minIntoTheDay(time);
+		
 		while (!filesForContouring.isEmpty() && numberOfFilesTreated <= 4) {
 			Patient patient = filesForContouring.poll();
 			System.out.println("The folder of the patient id : " + patient.getId() + " with priority "
 					+ patient.getPriority() + " is supported for the Contouring " + min);
-	
 			filesForDosi.add(patient);
 			numberOfFilesTreated++;
-
 		}
-		
-
-
 	}
 
 	@Override
 	public ActivityEvent clone() {
-		// TODO Auto-generated method stub
-		return new Contouring();
+		Contouring clone = new Contouring();
+		clone.setActivity(this.getActivity());
+		return clone;
 	}
 
 
@@ -51,10 +47,7 @@ public class Contouring extends ActivityEvent {
 			this.delay = (int) (30+ Math.random() * 60 - 30);
 		} else {
 			this.delay = (int) (60 + Math.random() * (180 - 60));
-
 		}
-	
-		
 	}
 	
 	public void generateDelay() {

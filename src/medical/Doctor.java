@@ -119,10 +119,6 @@ public class Doctor implements ISchedule {
 		this.filesForContouring = filesForContouring;
 	}
 
-	public void processPatientFilesForContouring() {
-		Collections.sort(this.filesForContouring, new FileComparator1());
-	}
-
 	@Override
 	public Week addWeek(int weekId) {
 		return getSchedule().addWeek(weekId);
