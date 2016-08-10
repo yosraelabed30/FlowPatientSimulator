@@ -294,8 +294,10 @@ public class Technologist implements ISchedule{
 				firstTreatmentForMachine=null;
 				CTSims = Technologist.nullList(nbCTSims);
 			}
-			else if(dateFirstTreatment.compareTo(deadLine) >=0 && relaxingConstraintFirstTreatmentCTSim){
-				System.out.println("------------------->BOUHOUHOU patient cannot be treated on time");
+			else if(dateFirstTreatment.compareTo(deadLine) >=0 && relaxingConstraintFirstTreatmentCTSim){ // we found a first treatment, for the machine, but it is not before the deadline and we already relaxed
+				firstTreatmentForMachine.delete();
+				firstTreatmentForMachine=null;
+				System.out.println("-------------------> BOUHOUHOU patient cannot be treated on time, we do not treat him... (for now)");
 				couldBePlannedOnTime=false;
 				break;
 			}

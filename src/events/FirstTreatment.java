@@ -23,7 +23,7 @@ public class FirstTreatment extends ActivityEvent{
 			System.out.println("FirstTreatment ; patient id: "+patient.getId()+", prio : "+patient.getPriority()+", with treatmentmachine : "+machine.getId()+", at min : "+Time.minIntoTheDay(Time.time()));
 		}
 		else{
-			System.out.println("FirstTreatment ;	NOT HERE patient id: "+patient.getId()+", prio : "+patient.getPriority()+", with treatmentmachine : "+machine.getId()+", at min : "+Time.minIntoTheDay(Time.time()));
+			System.out.println("FirstTreatment ; NOT HERE patient id: "+patient.getId()+", prio : "+patient.getPriority()+", with treatmentmachine : "+machine.getId()+", at min : "+Time.minIntoTheDay(Time.time()));
 		}
 	}
 
