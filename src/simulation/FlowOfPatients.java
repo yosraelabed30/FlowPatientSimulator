@@ -9,6 +9,7 @@ import medical.Cancer;
 import medical.Center;
 import medical.ChefSphere;
 import medical.Doctor;
+import medical.Dosimetrist;
 import medical.Patient;
 import medical.Priority;
 import medical.ScanTechnic;
@@ -17,11 +18,16 @@ import medical.Scan;
 import medical.Technologist;
 import medical.TreatmentMachine;
 import medical.TreatmentTechnic;
+import events.ActivityEvent;
 import events.ArrivalTreatment;
+import events.CalculDosi;
+import events.Contouring;
 import events.PreConsultation;
 import events.ReferredPatient;
 import events.Treatment;
+import events.TreatmentPlan;
 import scheduling.Activity;
+import scheduling.ActivityStatus;
 import scheduling.ActivityType;
 import scheduling.Block;
 import scheduling.BlockType;
@@ -85,9 +91,9 @@ public class FlowOfPatients {
 //		test.simulateOneRun(525600*2);
 //		test.simulateOneRun(525600);
 //		test.simulateOneRun(288000);
-//		test.simulateOneRun(100000);
+		test.simulateOneRun(100000);
 //		test.simulateOneRun(30000);
-		test.simulateOneRun(72*60);
+//		test.simulateOneRun(72*60);
 		
 		time = System.currentTimeMillis()-time;
 		System.out.println("time : "+time);
@@ -123,7 +129,17 @@ public class FlowOfPatients {
 				ArrayList<Block> blocks1 = new ArrayList<>();
 				blocks1.add(new Block(0, 0, 8*60, BlockType.NotWorking));
 				blocks1.add(new Block(1, 8*60, 17*60, BlockType.Consultation));
-				blocks1.add(new Block(2, 17*60+1, 24*60-1, BlockType.NotWorking));
+				Block contouringBlock = new Block(2, 17*60, 19*60, BlockType.Contouring);
+				Activity contouringActivity = contouringBlock.getActivities().get(0);
+				contouringActivity.setType(ActivityType.Contouring);
+				contouringActivity.setActivityEvent(new Contouring());
+				blocks1.add(contouringBlock);
+				Block treatmentPlanBlock = new Block(3, 19*60, 20*60, BlockType.TreatmentPlan);
+				Activity treatmentPlanActivity = treatmentPlanBlock.getActivities().get(0);
+				treatmentPlanActivity.setType(ActivityType.TreatmentPlan);
+				treatmentPlanActivity.setActivityEvent(new TreatmentPlan());
+				blocks1.add(treatmentPlanBlock);
+				blocks1.add(new Block(4, 20*60, 24*60, BlockType.NotWorking));
 				blocksTab1.add(blocks1);
 			}
 			ArrayList<Sphere> sphereDoctor = new ArrayList<>();
@@ -171,6 +187,19 @@ public class FlowOfPatients {
 			}
 			chum.getCtscans().add(new Scan(chum, true, scanTechnic, blocksTab5));
 		}
+		
+		ArrayList<ArrayList<Block>>blocksTab6 = new ArrayList<ArrayList<Block>>(7);
+		for(int i=0;i<7;i++){
+			ArrayList<Block> blocks6 = new ArrayList<>();
+			Block dosiBlock = new Block(0, 8*60, 17*60, BlockType.Dosimetry);
+			Activity dosiActivity = dosiBlock.getActivities().get(0);
+			dosiActivity.setType(ActivityType.Dosimetry);
+			dosiActivity.setActivityEvent(new CalculDosi());
+			blocks6.add(dosiBlock);
+			blocksTab6.add(blocks6);
+		}
+		Dosimetrist dosi1 = new Dosimetrist(chum, blocksTab6);
+		chum.getDosimetrists().add(dosi1);
 		
 		chum.setAdminAgent(new AdminAgent(chum));
 		chum.setTechnologist(new Technologist(chum));
@@ -250,8 +279,8 @@ public class FlowOfPatients {
 
 			getCenter().fromPatientsToPatientsOut();
 			
-			isReadyForTheTreatment(2);
-			isReadyForTheTreatment(1);
+//			isReadyForTheTreatment(2);
+//			isReadyForTheTreatment(1);
 
 		}
 

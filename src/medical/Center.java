@@ -19,8 +19,8 @@ public class Center {
 	LinkedList<Patient> patientsOut;
 	ArrayList<Scan> scans;
 	ArrayList<TreatmentMachine> treatmentMachines;
-
-	private Dosimetrist dosimetrists;
+	
+	private ArrayList<Dosimetrist> dosimetrists;
 	private AdminAgent adminAgent;
 	private Technologist technologist;
 	private ArrayList <Sphere> spheres;
@@ -35,6 +35,7 @@ public class Center {
 		this.chefSpheres = new ArrayList<>();
 		this.treatmentMachines = new ArrayList<>();
 		this.spheres = new ArrayList<>();
+		this.dosimetrists = new ArrayList<>();
 	}
 
 	
@@ -44,7 +45,7 @@ public class Center {
 			LinkedList<Patient> patients, LinkedList<Patient> patientsOut,
 			ArrayList<Scan> scans,
 			ArrayList<TreatmentMachine> treatmentMachines,
-			Dosimetrist dosimetrists, AdminAgent adminAgent,
+			ArrayList<Dosimetrist> dosimetrists, AdminAgent adminAgent,
 			Technologist technologist, ArrayList <Sphere> spheres) {
 		super();
 		this.centerId = centerId;
@@ -55,7 +56,7 @@ public class Center {
 		this.patientsOut = patientsOut;
 		this.scans = scans;
 		this.treatmentMachines = treatmentMachines;
-		this.dosimetrists = dosimetrists;
+		this.setDosimetrists(dosimetrists);
 		this.adminAgent = adminAgent;
 		this.technologist = technologist;
 		this.spheres=spheres;
@@ -89,14 +90,6 @@ public class Center {
 
 	public void setWelcome(boolean welcome) {
 		this.welcome = welcome;
-	}
-
-	public Dosimetrist getDosimetrist() {
-		return dosimetrists;
-	}
-
-	public void setDosimetrist(Dosimetrist dosimetrist) {
-		this.dosimetrists = dosimetrist;
 	}
 
 	public ArrayList<Scan> getCtscans() {
@@ -138,6 +131,9 @@ public class Center {
 		for(TreatmentMachine treatmentMachine : treatmentMachines){
 			treatmentMachine.getSchedule().doNextTask();
 		}
+		for(Dosimetrist dosimetrist : dosimetrists){
+			dosimetrist.getSchedule().doNextTask();
+		}
 	}
 	
 	/**
@@ -157,6 +153,9 @@ public class Center {
 		}
 		for (TreatmentMachine treatmentMachine : treatmentMachines) {
 			treatmentMachine.addWeek(weekId);
+		}
+		for(Dosimetrist dosimetrist : dosimetrists){
+			dosimetrist.addWeek(weekId);
 		}
 	}
 
@@ -224,6 +223,18 @@ public class Center {
 
 	public void setSpheres(ArrayList <Sphere> spheres) {
 		this.spheres = spheres;
+	}
+
+
+
+	public ArrayList<Dosimetrist> getDosimetrists() {
+		return dosimetrists;
+	}
+
+
+
+	public void setDosimetrists(ArrayList<Dosimetrist> dosimetrists) {
+		this.dosimetrists = dosimetrists;
 	}
 
 	

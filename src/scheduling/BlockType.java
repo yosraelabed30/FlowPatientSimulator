@@ -6,9 +6,9 @@ public enum BlockType {
 	Consultation(),
 	Relance(),
 	Contouring(),
-	Treatment_plan(),
+	TreatmentPlan(),
     Reserved(),
-  
+    Dosimetry(),
     Treatment(),
     
 	All(), 

@@ -1,37 +1,33 @@
 package medical;
 
 
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.LinkedList;
 
-import fileComparators.FileComparator1;
+import scheduling.Block;
+import scheduling.ISchedule;
+import scheduling.Schedule;
+import scheduling.Week;
 
-public class Dosimetrist extends Resource{
+public class Dosimetrist implements ISchedule{
 	static private int dosimetristClassId=0;
 	private int id;
-
-	private static LinkedList<Patient> filesForDosi;
-	private static LinkedList<Patient> filesForVerif;
+	private Center center;
+	private Schedule schedule;
+	private static LinkedList<Patient> filesForDosi= new LinkedList<Patient>();
+	private static LinkedList<Patient> filesForVerif= new LinkedList<Patient>();
 	
-	public Dosimetrist(Center center, int id) {
-		super(center);
-		this.id = id;
-		
-		Dosimetrist.filesForDosi = new LinkedList<Patient>();
-		Dosimetrist.filesForVerif=new LinkedList<Patient>();
-	}
-
-	public void processFilesForDosi(){
-		Collections.sort(filesForDosi, new FileComparator1());
-		
-	}
-	
-	public static int getDosimetristClassId() {
-		return dosimetristClassId;
-	}
-
-	public static void setDosimetristClassId(int dosimetristClassId) {
-		Dosimetrist.dosimetristClassId = dosimetristClassId;
+	public Dosimetrist(Center center, ArrayList<ArrayList<Block>> blocksTab) {
+		super();
+		this.id = dosimetristClassId++;
+		this.setCenter(center);
+		this.setSchedule(new Schedule(this));
+		for (int i = 0; i < 7; i++) {
+			for (Block block : blocksTab.get(i)) {
+				block.setDay(getSchedule().getDefaultWeek().getDay(i));
+			}
+			getSchedule().getDefaultWeek().getDay(i).setBlocks(blocksTab.get(i));
+		}
 	}
 
 	public int getId() {
@@ -56,6 +52,27 @@ public class Dosimetrist extends Resource{
 
 	public static void setFilesForVerif(LinkedList<Patient> filesForVerif) {
 		Dosimetrist.filesForVerif = filesForVerif;
+	}
+
+	public Center getCenter() {
+		return center;
+	}
+
+	public void setCenter(Center center) {
+		this.center = center;
+	}
+
+	@Override
+	public Week addWeek(int weekId) {
+		return getSchedule().addWeek(weekId);
+	}
+
+	public Schedule getSchedule() {
+		return schedule;
+	}
+
+	public void setSchedule(Schedule schedule) {
+		this.schedule = schedule;
 	}
 	
 }

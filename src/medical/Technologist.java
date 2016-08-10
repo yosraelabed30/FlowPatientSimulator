@@ -27,8 +27,8 @@ import events.FirstTreatment;
 import events.Treatment;
 import fileComparators.FileComparator1;
 
-public class Technologist extends Resource implements ISchedule{
-	
+public class Technologist implements ISchedule{
+	private Center center;
 	private LinkedList<Patient> filesForPlanification;
 	private ArrayList<Scan> scans;
 	private ArrayList<TreatmentMachine> tmachines;
@@ -44,7 +44,8 @@ public class Technologist extends Resource implements ISchedule{
 	public Technologist(Center center, LinkedList<Patient> filesForPlanification,
 			ArrayList<Scan> scans, ArrayList<TreatmentMachine> tmachines,
 			LinkedList<Patient> filesForPreContouring) {
-		super(center);
+		super();
+		this.center = center;
 		this.filesForPlanification = filesForPlanification;
 		this.setScans(scans);
 		this.tmachines = tmachines;
@@ -553,6 +554,14 @@ public class Technologist extends Resource implements ISchedule{
 			processFileForPreContouring(patient);
 		}
 //		System.out.println("preContouring done");
+	}
+
+	public Center getCenter() {
+		return center;
+	}
+
+	public void setCenter(Center center) {
+		this.center = center;
 	}
 }
 

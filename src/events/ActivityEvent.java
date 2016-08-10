@@ -1,7 +1,6 @@
 package events;
 
 import medical.Center;
-import medical.Resource;
 import scheduling.Activity;
 import scheduling.ActivityStatus;
 import scheduling.Block;

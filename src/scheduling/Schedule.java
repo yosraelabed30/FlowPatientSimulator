@@ -6,7 +6,6 @@ import java.util.LinkedList;
 
 import events.ActivityEvent;
 import medical.Center;
-import medical.Resource;
 import tools.Time;
 import umontreal.iro.lecuyer.simevents.Sim;
 

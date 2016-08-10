@@ -21,9 +21,7 @@ public class Doctor implements ISchedule {
 	private int id;
 	private ArrayList<Sphere> spheres;
 	private ArrayList<Patient> folders;
-	private LinkedList<Patient> filesForContouring; // TODO during the
-													// contouring block
-
+	private LinkedList<Patient> filesForContouring;
 	private LinkedList<Patient> filesForPlanTreatment;
 	private Schedule schedule;
 	private boolean overTime;
@@ -36,7 +34,6 @@ public class Doctor implements ISchedule {
 		this.spheres = spheres;
 		this.folders = new ArrayList<>();
 		this.filesForContouring = new LinkedList<>();
-
 		this.filesForPlanTreatment = new LinkedList<>();
 		this.schedule = new Schedule(this);
 		for (int i = 0; i < 7; i++) {

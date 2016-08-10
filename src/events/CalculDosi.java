@@ -25,25 +25,24 @@ public class CalculDosi extends ActivityEvent{
 		int numberOfFilesTreated = 0;
 		int time = Time.time();
 		int min = Time.minIntoTheDay(time);
+		Dosimetrist dosimetrist = (Dosimetrist) this.getiSchedule();
 
 		while (!filesForDosi.isEmpty() && numberOfFilesTreated <= 4) {
 			Patient patient = filesForDosi.poll();
-			System.out.println("The folder of the patient id : " + patient.getId() + " with priority "
-					+ patient.getPriority() + " is supported for the Dosi " + min);
-			
-
-			
+//			System.out.println("The folder of the patient id : " + patient.getId() + " with priority "
+//					+ patient.getPriority() + " is supported for the Dosi " + min);
 			filesForVerif.add(patient);
 			numberOfFilesTreated++;
-
 		}
-
-		
+		new VerificationDosi(dosimetrist).schedule(0);
+		System.out.println("CalculDosi ; done by dosimetrist id : "+dosimetrist.getId()+", at min : "+min);
 	}
 
 	@Override
 	public ActivityEvent clone() {
-		return new CalculDosi();
+		CalculDosi clone = new CalculDosi();
+		clone.setActivity(this.getActivity());
+		return clone;
 	}
 
 	public void generateDelay(Patient patient) {

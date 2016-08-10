@@ -3,7 +3,6 @@ package scheduling;
 import java.util.ArrayList;
 
 import medical.Center;
-import medical.Resource;
 import tools.Time;
 /**
  * Day of a Week, in the Schedule

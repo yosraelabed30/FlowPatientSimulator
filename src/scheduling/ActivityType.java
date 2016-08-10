@@ -8,7 +8,8 @@ public enum ActivityType {
 	TreatmentPlan(),
 	FirstTreatment(),
 	FollowUp(), 
-	CTSim(), 
+	CTSim(),
+	Dosimetry(),
 	Treatment();
 	
 	private int scheduleDuration;

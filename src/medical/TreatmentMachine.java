@@ -8,14 +8,17 @@ import scheduling.Schedule;
 import scheduling.Week;
 
 
-public class TreatmentMachine extends Resource implements ISchedule{
+public class TreatmentMachine implements ISchedule{
+	private Center center;
 	static private int treatmentMachineClassId;
 	private int id;
 	private Schedule schedule;
 	private ArrayList < TreatmentTechnic> treatmentTechnics;
 	
 	public TreatmentMachine(Center center, ArrayList < TreatmentTechnic> treatmentTechnics, ArrayList<ArrayList<Block>> blocksTab){
-		super(center);
+		super();
+		this.id = treatmentMachineClassId++;
+		this.setCenter(center);
 		this.setTreatmentTechnics(treatmentTechnics);
 		this.schedule = new Schedule(this);
 		for(int i=0;i<7;i++){
@@ -53,6 +56,14 @@ public class TreatmentMachine extends Resource implements ISchedule{
 
 	public void setId(int id) {
 		this.id = id;
+	}
+
+	public Center getCenter() {
+		return center;
+	}
+
+	public void setCenter(Center center) {
+		this.center = center;
 	}
 
 }

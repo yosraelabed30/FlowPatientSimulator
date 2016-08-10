@@ -1,7 +1,6 @@
 package scheduling;
 
 import medical.Center;
-import medical.Resource;
 /**
  * Week in a schedule
  * @author Joffrey

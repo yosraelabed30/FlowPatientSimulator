@@ -11,7 +11,6 @@ public class TreatmentPlan extends ActivityEvent{
 
 	public TreatmentPlan() {
 		super();
-		
 	}
 
 	@Override
@@ -24,28 +23,24 @@ public class TreatmentPlan extends ActivityEvent{
 		int min = Time.minIntoTheDay(time);
 		while (!filesForPlanTreatment.isEmpty() && numberOfFilesTreated <= 4) {
 			Patient patient = filesForPlanTreatment.poll();
-			System.out.println("The folder of the patient id : " + patient.getId() + " with priority "
-					+ patient.getPriority() + " is supported for the Contouring " + min);
-	
-		
-			numberOfFilesTreated++;
-
+//			System.out.println("The folder of the patient id : " + patient.getId() + " with priority "
+//					+ patient.getPriority() + " is supported for the Contouring " + min);
+//			numberOfFilesTreated++;
 		}
-		
-		
-		
+		System.out.println("TreatmentPlan ; done by doctor id : "+doctor.getId());
+		doctor.getSchedule().doNextTask();
 	}
 
 	@Override
 	public ActivityEvent clone() {
-		
-		return new TreatmentPlan();
+		TreatmentPlan clone = new TreatmentPlan();
+		clone.setActivity(this.getActivity());
+		return clone;
 	}
 
 	@Override
 	public void generateDelay() {
 		// TODO Auto-generated method stub
-		
 	}
 
 }

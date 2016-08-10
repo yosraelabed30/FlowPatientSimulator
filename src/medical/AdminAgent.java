@@ -6,15 +6,17 @@ import java.util.LinkedList;
 
 import fileComparators.FileComparator1;
 
-public class AdminAgent extends Resource{
+public class AdminAgent{
 	/**
 	 * demands received by the administrative agent, those are not urgent, the urgent ones are sent directly to the chef de sphere
 	 */
 	LinkedList<Patient> demands;
+	private Center center;
 	
 	public AdminAgent(Center center) {
-		super(center);
+		super();
 		this.demands = new LinkedList<>();
+		this.setCenter(center);
 	}
 
 	public void addToDemands(Patient patient) {
@@ -41,6 +43,14 @@ public class AdminAgent extends Resource{
 	public void processDemands() {
 		this.sortDemands();
 		this.sendDemands(getCenter().getChefSpheres());
+	}
+
+	public Center getCenter() {
+		return center;
+	}
+
+	public void setCenter(Center center) {
+		this.center = center;
 	}
 	
 }

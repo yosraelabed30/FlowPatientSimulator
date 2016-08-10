@@ -5,7 +5,6 @@ import java.util.Collections;
 import java.util.LinkedList;
 
 import medical.Center;
-import medical.Resource;
 import events.ActivityEvent;
 import events.ArrivalConsultation;
 import events.PreConsultation;

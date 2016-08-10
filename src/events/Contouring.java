@@ -19,18 +19,20 @@ public class Contouring extends ActivityEvent {
 	public void childActions() {
 		Doctor doctor = (Doctor) this.getiSchedule();
 		LinkedList<Patient> filesForContouring = doctor.getFilesForContouring();
-		LinkedList< Patient> filesForDosi =Dosimetrist.getFilesForDosi();
+		LinkedList< Patient> filesForDosi = Dosimetrist.getFilesForDosi();
 		int numberOfFilesTreated =0;
 		int time = Time.time();
 		int min = Time.minIntoTheDay(time);
 		
 		while (!filesForContouring.isEmpty() && numberOfFilesTreated <= 4) {
 			Patient patient = filesForContouring.poll();
-			System.out.println("The folder of the patient id : " + patient.getId() + " with priority "
-					+ patient.getPriority() + " is supported for the Contouring " + min);
+//			System.out.println("The folder of the patient id : " + patient.getId() + " with priority "
+//					+ patient.getPriority() + " is supported for the Contouring " + min+", nb of files processed today by this doc : "+numberOfFilesTreated);
 			filesForDosi.add(patient);
 			numberOfFilesTreated++;
 		}
+		System.out.println("Contouring ; done by doctor id : "+doctor.getId()+", at min : "+min);
+		doctor.getSchedule().doNextTask();
 	}
 
 	@Override

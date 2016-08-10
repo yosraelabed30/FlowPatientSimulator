@@ -3,7 +3,6 @@ package scheduling;
 import java.util.LinkedList;
 
 import medical.Center;
-import medical.Resource;
 
 public class Block implements Comparable<Block>{
 	/**

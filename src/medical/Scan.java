@@ -12,9 +12,10 @@ import umontreal.iro.lecuyer.simevents.Sim;
 
 //TODO create blocks for the scan during which they are reserved for P1 patient (not sure)
 
-public class Scan extends Resource implements ISchedule{
+public class Scan implements ISchedule{
 	static private int ctscanClassId;
 	private int id;
+	private Center center;
 	private Schedule schedule;
 	private boolean forCurative;
 	private ScanTechnic imageryTechnic;
@@ -23,7 +24,8 @@ public class Scan extends Resource implements ISchedule{
 	 * Constructor for when it does not matter what kind of ctscan it is
 	 */
 	public Scan(Center center, boolean forCurative, ScanTechnic imageryTechnic, ArrayList<ArrayList<Block>> blocksTab){
-		super(center);
+		super();
+		this.center = center;
 		this.schedule = new Schedule(this);
 		this.id = ctscanClassId++;
 		this.forCurative = forCurative;
@@ -87,6 +89,14 @@ public class Scan extends Resource implements ISchedule{
 
 	public void setSchedule(Schedule schedule) {
 		this.schedule = schedule;
+	}
+
+	public Center getCenter() {
+		return center;
+	}
+
+	public void setCenter(Center center) {
+		this.center = center;
 	}
 
 }
