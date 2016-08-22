@@ -14,6 +14,9 @@ import scheduling.ISchedule;
 import scheduling.Schedule;
 import scheduling.Week;
 import tools.Time;
+import umontreal.iro.lecuyer.randvar.RandomVariateGen;
+import umontreal.iro.lecuyer.randvar.UniformGen;
+import umontreal.iro.lecuyer.rng.MRG32k3a;
 import umontreal.iro.lecuyer.simevents.Sim;
 
 /**
@@ -55,48 +58,35 @@ public class Patient  implements ISchedule{
 	 */
 	private Doctor doctor;
 	/**
-	 * the next activity to come in the schedule
-	 */
-	private Activity nextActivity;
-	/**
 	 * if the patient referred is an emergency or not
 	 */
 	private boolean emergency;
 	/**
 	 * whether the patient is present or not in the center
 	 */
-	private boolean present;
+	private boolean presentInCenter;
 	/**
 	 * whether the patient needs to be treated or not
 	 */
 	private boolean out;
-	/**
-	 * 1 = P1
-	 * 2 = P2, etc
-	 */
-	
-	
 	private MachineType machineType;
 	
 	/**
 	 * TODO recheck for improvements, scheduled during planif and used after
 	 */
-	private Activity firstTreatment;
 	private TreatmentTechnic treatmentTechnic;
 	private boolean moldNeeded;
-	private ArrayList<ScanTechnic> imageryTechnics;
+	private ArrayList<ScanTechnic> scanTechnics;
 	private int nbTreatments;
-	private boolean inCenter;
 	private Schedule schedule;
 	private LinkedList<Activity> steps;
 	private LinkedList<Activity> plannedStepsTreatments;
 	private LinkedList<Activity> plannedStepsPreTreatment;
 	private Date referredDate;
 	private Sphere sphere;
-	private Center center;
 	private Priority priority;
-	
-	
+	public static RandomVariateGen genCurativeUnif =new UniformGen(new MRG32k3a(),0,1);
+	public static RandomVariateGen genEmergencyUnif =new UniformGen(new MRG32k3a(),0,1);
 
 
 
@@ -110,22 +100,21 @@ public class Patient  implements ISchedule{
 		this.id = staticPatientId++;
 		this.cancer= Cancer.generateCancer();
 		
-		this.curative = Math.random()>0.5 ? true : false;
+		this.curative = genCurativeUnif.nextDouble()>0.5 ? true : false;
 		this.arrivalDay = -10;
 		this.arrivalMinutes =-10;
 		this.steps = new LinkedList<>();
 	
 		this.doctor = null;
-		this.setNextActivity(null);
 		//TODO change the emergency 
-		double rd = Math.random();
+		double rd = genEmergencyUnif.nextDouble();
 		if (rd<=0.2){
 			this.setEmergency(true);
 		}
 		else{
 			this.setEmergency(false);
 		}
-		this.present = false; //TODO change that
+		this.presentInCenter = false; //TODO change that
 		
 		
 		this.priority = Priority.generatePriority();
@@ -139,7 +128,7 @@ public class Patient  implements ISchedule{
 		ArrayList<ArrayList<Block>>blocksTab = new ArrayList<ArrayList<Block>>(7);
 		for(int i=0;i<7;i++){
 			ArrayList<Block> blocks = new ArrayList<>();
-			blocks.add(new Block(0, 0*60, 23*60-1, BlockType.All));
+			blocks.add(new Block(0, 0*60, 24*60-1, BlockType.All));
 			blocksTab.add(blocks);
 		}
 		for(int i=0;i<7;i++){
@@ -154,8 +143,8 @@ public class Patient  implements ISchedule{
 		int weekId = Time.weekCorrespondingToTime(time);
 		this.addWeek(weekId);
 		
-		this.referredDate = Date.dateNow();
-		this.center=center;
+		this.referredDate = Date.now();
+
 		for (Sphere sphere : center.getSpheres()) {
 			if (sphere.getCancer()==this.getCancer()) {
 				this.sphere=sphere;
@@ -164,9 +153,6 @@ public class Patient  implements ISchedule{
 		this.setPlannedStepsTreatments(new LinkedList());
 		this.plannedStepsPreTreatment =new LinkedList();
 		this.steps = new LinkedList<>();
-		this.inCenter=true;
-		this.firstTreatment=firstTreatment;
-	
 	}
 	
 	public ArrayList<Doctor> doctorsTreatingPatientCancer(ArrayList<Doctor> doctors) {
@@ -262,18 +248,6 @@ public class Patient  implements ISchedule{
 		this.arrivalMinutes = arrivalMinutes;
 	}
 
-
-
-	public Activity getNextActivity() {
-		return nextActivity;
-	}
-
-
-
-	public void setNextActivity(Activity nextActivity) {
-		this.nextActivity = nextActivity;
-	}
-
 	public boolean newlyReferred() {
 		// TODO Auto-generated method stub
 		return false;
@@ -287,12 +261,12 @@ public class Patient  implements ISchedule{
 		this.emergency = emergency;
 	}
 
-	public boolean isPresent() {
-		return present;
+	public boolean isPresentInCenter() {
+		return presentInCenter;
 	}
 
-	public void setPresent(boolean present) {
-		this.present = present;
+	public void setPresentInCenter(boolean presentInCenter) {
+		this.presentInCenter = presentInCenter;
 	}
 
 	public boolean isOut() {
@@ -301,6 +275,10 @@ public class Patient  implements ISchedule{
 
 	public void setOut(boolean out) {
 		this.out = out;
+	}
+	
+	public void toPatientsOut(){
+		this.getSphere().getCenter().toPatientsOut(this);
 	}
 
 	@Override
@@ -356,12 +334,12 @@ public class Patient  implements ISchedule{
 		this.moldNeeded = moldNeeded;
 	}
 
-	public ArrayList<ScanTechnic> getImageryTechnics() {
-		return imageryTechnics;
+	public ArrayList<ScanTechnic> getScanTechnics() {
+		return scanTechnics;
 	}
 
-	public void setImageryTechnics(ArrayList<ScanTechnic> imageryTechnics) {
-		this.imageryTechnics = imageryTechnics;
+	public void setScanTechnics(ArrayList<ScanTechnic> scanTechnics) {
+		this.scanTechnics = scanTechnics;
 	}
 
 	public int getNbTreatments() {
@@ -453,40 +431,12 @@ public class Patient  implements ISchedule{
 		return businessDays;
 	}
 
-
-	
-
-
-	public boolean isInCenter() {
-		return inCenter;
-	}
-
-	public void setInCenter(boolean inCenter) {
-		this.inCenter = inCenter;
-	}
-
 	public Sphere getSphere() {
 		return sphere;
 	}
 
 	public void setSphere(Sphere sphere) {
 		this.sphere = sphere;
-	}
-
-	public Center getCenter() {
-		return center;
-	}
-
-	public void setCenter(Center center) {
-		this.center = center;
-	}
-
-	public Activity getFirstTreatment() {
-		return firstTreatment;
-	}
-
-	public void setFirstTreatment(Activity firstTreatment) {
-		this.firstTreatment = firstTreatment;
 	}
 
 	public LinkedList<Activity> getPlannedStepsPreTreatment() {
@@ -507,19 +457,19 @@ public class Patient  implements ISchedule{
 
 	public String toString(){
 		String s = "Patient id : "+this.getId()+", priority : "+this.getPriority()+" ";
-		s+="\n	Referred, "+this.getReferredDate();
+		s+="\nReferred, "+this.getReferredDate();
 		
 		int nbMin=-1;
 		boolean firstTreatment = true;
 		for (Activity activity : this.getSteps()) {
-			s+="\n	"+activity.getType()+", "+activity.getDate();
+			s+="\n"+activity.getType()+", "+activity.getDate();
 			if(activity.getType()==ActivityType.Treatment && firstTreatment){
 				firstTreatment=false;
 				nbMin = activity.getDate().toMinutes()-this.getReferredDate().toMinutes();
 			}
 		}
 
-		s+="\n		 Duration between the consultation and the first treatment : "+Date.toDates(nbMin);
+		s+="\nDuration between the consultation and the first treatment : "+Date.toDates(nbMin);
 		return s;
 	}
 }

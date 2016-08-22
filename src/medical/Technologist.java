@@ -16,6 +16,7 @@ import scheduling.ISchedule;
 import scheduling.Schedule;
 import scheduling.Week;
 import simulation.FlowOfPatients;
+import simulation.Statistics;
 import tools.Time;
 import umontreal.iro.lecuyer.stochprocess.GeometricBrownianMotion;
 import events.ActivityEvent;
@@ -30,34 +31,19 @@ import fileComparators.FileComparator1;
 public class Technologist implements ISchedule{
 	private Center center;
 	private LinkedList<Patient> filesForPlanification;
-	private ArrayList<Scan> scans;
-	private ArrayList<TreatmentMachine> tmachines;
 	private static LinkedList<Patient> filesForPreContouring;
 	private Schedule schedule ;
 	
-	
-	
 	public Technologist(Center center){
-		this(center, new LinkedList<Patient>(), center.getCtscans(), center.getTreatmentMachines(), new LinkedList<Patient>());
+		this(center, new LinkedList<Patient>(), new LinkedList<Patient>());
 	}
 	
 	public Technologist(Center center, LinkedList<Patient> filesForPlanification,
-			ArrayList<Scan> scans, ArrayList<TreatmentMachine> tmachines,
 			LinkedList<Patient> filesForPreContouring) {
 		super();
 		this.center = center;
 		this.filesForPlanification = filesForPlanification;
-		this.setScans(scans);
-		this.tmachines = tmachines;
 		Technologist.filesForPreContouring = filesForPreContouring;
-	}
-
-	public ArrayList<TreatmentMachine> getTmachines() {
-		return tmachines;
-	}
-
-	public void setTmachines(ArrayList<TreatmentMachine> tmachines) {
-		this.tmachines = tmachines;
 	}
 	
 	/**
@@ -86,17 +72,6 @@ public class Technologist implements ISchedule{
 		this.filesForPlanification = filesForCTSimTreatment;
 	}
 	
-	
-	
-	
-	public ArrayList<Scan> getScans() {
-		return scans;
-	}
-
-	public void setScans(ArrayList<Scan> scans) {
-		this.scans = scans;
-	}
-
 	public Schedule getSchedule() {
 		return schedule;
 	}
@@ -112,135 +87,147 @@ public class Technologist implements ISchedule{
 
 	
 	public Activity DelayTreatment(Patient patient) {
-		Activity best = null;
-		Activity tmp = null;
-		int arrivalMinutes;
+		Activity treatment=null;
+		Availability best = null;
+		Availability tmp = null;
 		int duration = 45;
 		ArrayList<TreatmentMachine> adequateMachine = new ArrayList<>();
-
-		arrivalMinutes = patient.getArrivalMinutes();
-
+		
+		Date dateLowerBound = Date.toDates(patient.getArrivalMinutes());
+		Date dateUpperBound = dateLowerBound.clone();
+		dateUpperBound.setMinute(24*60-1);
+		ArrayList<BlockType> blockTypes = new ArrayList<>();
+		blockTypes.add(BlockType.Treatment);
+		ArrayList<Integer> daysForbidden = new ArrayList<>();
 		for (TreatmentMachine treatmentMachine : this.getCenter().getTreatmentMachines()) {
 			if (treatmentMachine.getTreatmentTechnics() .contains(patient.getTreatmentTechnic()) ) {
 				adequateMachine.add(treatmentMachine);
-				tmp = treatmentMachine.getSchedule().getFirstAvailabilityBeforeTheEndOfTheDay(duration,
-						BlockType.Treatment, arrivalMinutes);
+				tmp = treatmentMachine.getSchedule().findFirstAvailability(ActivityType.Treatment, duration, blockTypes, daysForbidden, dateLowerBound, dateUpperBound);
 			}
-			if (best == null || tmp.startsEarlierThan(best)) {
+			if (best == null || tmp.compareTo(best)==-1) {
 				best = tmp;
 			}
 		}
 		if (best == null) {
 			for (TreatmentMachine treatmentMachine : adequateMachine) {
-				tmp = findOvertimeFreeActivity(treatmentMachine, Date.dateNow(), duration);
+				blockTypes.remove(BlockType.Treatment);
+				blockTypes.add(BlockType.OverTime);
+				tmp = treatmentMachine.getSchedule().findFirstAvailability(ActivityType.Treatment, duration, blockTypes, daysForbidden, dateLowerBound, dateUpperBound);
 			}
-			if (best == null || tmp.startsEarlierThan(best)) {
+			if (best == null || tmp.compareTo(best)==-1) {
 				best = tmp;
 			}
 
 		}
 		if (best != null) {
-			TreatmentMachine machine = (TreatmentMachine) best.getiSchedule();
 			int start = best.getStart();
 			ActivityType type = ActivityType.Treatment;
 			ActivityEvent event = new Treatment(patient);
-			Activity Treatment = new Activity(start, duration, type, event);
-			best.insert(Treatment);
-
+			treatment = new Activity(start, duration, type, event);
+			best.getActivity().insert(treatment);
 		}
-		return best;
+		return treatment;
 	}
 		
 	public Activity NoShowsTreatment(Patient patient){
-		
-		int duration =45;
+		int duration = 45;
 		boolean scheduled = false;
-		boolean planned = false;
-		ArrayList<TreatmentMachine> adequateMachine = new ArrayList<>();
 		Activity best = patient.getPlannedStepsTreatments().getLast();
 		Date date = best.getDate().increase();
 		TreatmentMachine machine = (TreatmentMachine) best.getiSchedule();
-		for (TreatmentMachine treatmentMachine : this.getCenter().getTreatmentMachines()) {
-			if (treatmentMachine.getTreatmentTechnics().contains(patient.getTreatmentTechnic()) ) {
-				adequateMachine.add(treatmentMachine);
-			}
-		}
-		scheduled = this.scheduleTreatment(patient, machine, date, duration, adequateMachine);
-		planned = planned && scheduled;
+		scheduled = this.scheduleTreatment(patient, machine, date, duration, true);
 		if (!scheduled) {
 			System.out.println("A treatment could not be scheduled");
-
-		
-
-	}
-
-	return best;
-	}
-			
-		
-	
-			
-	
-		
-	
-	
-	
-	public Activity findOvertimeFreeActivity(TreatmentMachine treatmentMachine, Date date, int duration){
-		Activity freeAct = null;
-		Day day = treatmentMachine.getSchedule().getDay(date.getWeekId(), date.getDayId());
-		for (Block currentBlock : day.getBlocks()){
-			if (currentBlock.getType() == BlockType.Treatment){
-				int endActivty= currentBlock.getActivities().getLast().getEnd();
-				int endBlock= currentBlock.getEnd();
-				int elongationMinutes = duration- endBlock + endActivty;
-				if(elongationMinutes+endActivty<19*60+30){
-					freeAct = currentBlock.elongation(elongationMinutes);
-					break;
-				}
-				
-			}
 		}
-		return freeAct;
+		else{
+			((Treatment) best.getActivityEvent()).setLast(false);
+		}
+		return best;
 	}
-
-	public boolean scheduleTreatment(Patient patient, TreatmentMachine machine, Date date, int duration, ArrayList<TreatmentMachine> adequateMachine){
+			
+	private boolean scheduleTreatment(Patient patient,
+			TreatmentMachine machine, Date date, int duration, boolean isLast) {
+		boolean couldBeDone = true;
+		ArrayList<TreatmentMachine> adequateMachine = new ArrayList<>();
 		int start = date.getMinute();
-		Activity freeAct = machine.getSchedule().findFreeActivityToInsertOtherActivity(date, duration);
-		if (freeAct == null){
-			for (TreatmentMachine treatmentMachine : adequateMachine) {
-				freeAct = treatmentMachine.getSchedule().findFreeActivityToInsertOtherActivity(date, duration);
-				if(freeAct!=null){
-					break;
+		Availability freeActMachine = machine.getSchedule()
+				.findAvailability(date, duration);
+		if (freeActMachine == null) {
+			for (TreatmentMachine treatmentMachine : patient.getSphere().getCenter()
+					.getTreatmentMachines()) {
+				if (treatmentMachine.getTreatmentTechnics().contains(
+						patient.getTreatmentTechnic())) {
+					adequateMachine.add(treatmentMachine);
+					freeActMachine = treatmentMachine.getSchedule()
+							.findAvailability(date,
+									duration);
+					if (freeActMachine != null) {
+						break;
+					}
 				}
 			}
-			if (freeAct == null){
-				freeAct = machine.getSchedule().getFirstAvailabilityInDay(duration,BlockType.Treatment, date); //this freeAct is obviously more than a day in the future, so we can schedule the treatment starting at the same time as freeAct
-				if (freeAct == null){
+			if (freeActMachine == null) {
+				ArrayList<BlockType> blockTypes = new ArrayList<>();
+				blockTypes.add(BlockType.Treatment);
+				ArrayList<Integer> daysForbidden = new ArrayList<Integer>();
+				Date dateUpperBound = date.clone();
+				dateUpperBound.setMinute(24 * 60 - 1);
+				// this freeAct is obviously more than a day in the future, so
+				// we can schedule the treatment starting at the same time as
+				// freeAct
+				freeActMachine = machine.getSchedule().findFirstAvailability(
+						ActivityType.Treatment, duration, blockTypes,
+						daysForbidden, date, dateUpperBound);
+				if (freeActMachine == null) {
 					for (TreatmentMachine treatmentMachine : adequateMachine) {
-						freeAct = treatmentMachine.getSchedule().getFirstAvailabilityInDay(duration, BlockType.Treatment, date);
+						freeActMachine = treatmentMachine.getSchedule()
+								.findFirstAvailability(ActivityType.Treatment,
+										duration, blockTypes, daysForbidden,
+										date, dateUpperBound);
 					}
-					if (freeAct == null){
-						freeAct = this.findOvertimeFreeActivity(machine, date, duration);
-						if(freeAct==null){
+					if (freeActMachine == null) {
+						blockTypes.remove(BlockType.Treatment);
+						blockTypes.add(BlockType.OverTime);
+						freeActMachine = machine.getSchedule()
+								.findFirstAvailability(ActivityType.Treatment,
+										duration, blockTypes, daysForbidden,
+										date, dateUpperBound);
+						if (freeActMachine == null) {
 							for (TreatmentMachine treatmentMachine : adequateMachine) {
-								freeAct = this.findOvertimeFreeActivity(treatmentMachine, date, duration);
+								freeActMachine = treatmentMachine.getSchedule()
+										.findFirstAvailability(
+												ActivityType.Treatment,
+												duration, blockTypes,
+												daysForbidden, date,
+												dateUpperBound);
 							}
-							if (freeAct==null){
-								//TODO treat those cases
-								//System.out.println("issue");
-								return false;
+							if (freeActMachine == null) {
+								// TODO treat those cases
+								// System.out.println("issue");
+								couldBeDone=false;
 							}
-							
 						}
 					}
 				}
-				start = freeAct.getStart();
+				start = freeActMachine.getStart();
 			}
-
 		}
-		Activity treatment= new Activity(start, duration, ActivityType.Treatment, new Treatment (patient));
-		freeAct.insert(treatment);
-		return true;
+		Treatment treatmentEvent = new Treatment(patient);
+		Activity treatmentForMachine = new Activity(start, duration,
+				ActivityType.Treatment, treatmentEvent);
+		treatmentEvent.setLast(isLast);
+		freeActMachine.getActivity().insert(treatmentForMachine);
+		Activity treatmentForPatient = treatmentForMachine.clone();
+		TreatmentMachine treatmentMachine = (TreatmentMachine) treatmentForMachine
+				.getiSchedule();
+		treatmentForPatient.setActivityEvent(new ArrivalTreatment(
+				treatmentMachine));
+		Availability freeActPatient = patient.getSchedule()
+				.findAvailability(
+						treatmentForPatient.getDate(), duration);
+		freeActPatient.getActivity().insert(treatmentForPatient);
+		patient.getPlannedStepsTreatments().add(treatmentForPatient);
+		return couldBeDone;
 	}
 
 	public LinkedList<LinkedList<Integer>> allPerms(LinkedList<Integer> list){
@@ -266,11 +253,12 @@ public class Technologist implements ISchedule{
 	}
 	
 	public void processFileForPlanification(Patient patient){
+		Statistics.increaseNbPatientsForPlanif();
 		Activity firstTreatmentForMachine = null;
-		int nbCTSims = patient.getImageryTechnics().size();
+		int nbCTSims = patient.getScanTechnics().size();
 		ArrayList<Activity> CTSims = Technologist.nullList(nbCTSims);
-		Date dateLowerBound = Date.dateNow();
-		Date dateFirstTreatment = Date.dateNow();
+		Date dateLowerBound = Date.now();
+		Date dateFirstTreatment = null;
 		Date deadLine = patient.getDeadLine();
 		boolean relaxingConstraintFirstTreatmentCTSim = false;
 		
@@ -280,49 +268,53 @@ public class Technologist implements ISchedule{
 			firstTreatmentForMachine = searchFirstTreatment(patient, dateLowerBound);
 			dateFirstTreatment = firstTreatmentForMachine.getDate();
 			dateLowerBound = firstTreatmentForMachine.getEndDate();
-			if (dateFirstTreatment.compareTo(deadLine) == -1) {
-				CTSims = searchCTSims(patient, dateFirstTreatment,
-						relaxingConstraintFirstTreatmentCTSim);
-				if(CTSims.contains(null)){
+			dateLowerBound.increaseMinute();
+			CTSims = searchCTSims(patient, dateFirstTreatment,
+					relaxingConstraintFirstTreatmentCTSim);
+			if(CTSims.contains(null)){
+				firstTreatmentForMachine.delete();
+				firstTreatmentForMachine=null;
+			}
+			if(dateFirstTreatment.compareTo(deadLine) >= 0 && !relaxingConstraintFirstTreatmentCTSim){
+				relaxingConstraintFirstTreatmentCTSim = true;
+				dateLowerBound = Date.now();
+				if(firstTreatmentForMachine!=null){
 					firstTreatmentForMachine.delete();
 					firstTreatmentForMachine=null;
 				}
-			} else if(dateFirstTreatment.compareTo(deadLine) >= 0 && !relaxingConstraintFirstTreatmentCTSim){
-				relaxingConstraintFirstTreatmentCTSim = true;
-				dateLowerBound = Date.dateNow();
-				firstTreatmentForMachine.delete();
-				firstTreatmentForMachine=null;
 				CTSims = Technologist.nullList(nbCTSims);
 			}
-			else if(dateFirstTreatment.compareTo(deadLine) >=0 && relaxingConstraintFirstTreatmentCTSim){ // we found a first treatment, for the machine, but it is not before the deadline and we already relaxed
-				firstTreatmentForMachine.delete();
-				firstTreatmentForMachine=null;
-				System.out.println("------------------->  patient id : "+patient.getId()+", with priority : "+patient.getPriority()+" cannot be treated on time, we do not treat him... (for now)");
+			else if(dateFirstTreatment.compareTo(deadLine) >=0 && relaxingConstraintFirstTreatmentCTSim && !CTSims.contains(null)){ // we found a first treatment, for the machine, but it is not before the deadline and we already relaxed
+				Statistics.increasePlannedLate();
+				System.out.println("------------------->  patient id : "+patient.getId()+", with priority : "+patient.getPriority()+", at "+Date.now().getMinute()+", cannot be treated on time. Date first treatment : "+dateFirstTreatment+" and deadline : "+deadLine);
 				couldBePlannedOnTime=false;
-				break;
 			}
 		}
 		
 		if(couldBePlannedOnTime){
-			System.out.println("Patient can be treated on time <----------------------- patient id : "+patient.getId()+", with priority : "+patient.getPriority());
-			Activity freeForFirstTreatment = patient.getSchedule().findFreeActivityToInsertOtherActivity(firstTreatmentForMachine.getDate(), firstTreatmentForMachine.duration());
-			Activity firstTreatmentForPatient = firstTreatmentForMachine.clone();
-			TreatmentMachine treatmentMachine = (TreatmentMachine) firstTreatmentForMachine.getiSchedule();
-			firstTreatmentForPatient.setActivityEvent(new ArrivalTreatment(treatmentMachine));
-			freeForFirstTreatment.insert(firstTreatmentForPatient);
-			patient.getPlannedStepsTreatments().add(firstTreatmentForPatient);
-			
-			for (Activity ctSimForScan : CTSims) {
-				Activity freeForCTSim = patient.getSchedule().findFreeActivityToInsertOtherActivity(ctSimForScan.getDate(), ctSimForScan.duration());
-				Activity ctSimForPatient = ctSimForScan.clone();
-				ctSimForPatient.setActivityEvent(new ArrivalCTSim());
-				freeForCTSim.insert(ctSimForPatient);
-				patient.getPlannedStepsPreTreatment().add(ctSimForPatient);
-			}
-			
-			//only remains to program the other treatments
-			this.programOtherTreatments(firstTreatmentForPatient, (TreatmentMachine)firstTreatmentForMachine.getiSchedule());
+			Statistics.increasePlannedOnTime();
+			System.out.println("At "+Date.now().getMinute()+", patient can be treated on time <----------------------- patient id : "+patient.getId()+", with priority : "+patient.getPriority());
 		}
+		Availability freeForFirstTreatment = patient.getSchedule().findAvailability(firstTreatmentForMachine.getDate(), firstTreatmentForMachine.duration());
+		Activity firstTreatmentForPatient = firstTreatmentForMachine.clone();
+		TreatmentMachine treatmentMachine = (TreatmentMachine) firstTreatmentForMachine.getiSchedule();
+		firstTreatmentForPatient.setActivityEvent(new ArrivalTreatment(treatmentMachine));
+		freeForFirstTreatment.getActivity().insert(firstTreatmentForPatient);
+		patient.getPlannedStepsTreatments().add(firstTreatmentForPatient);
+		
+		for (Activity ctSimForScan : CTSims) {
+			Availability freeForCTSim = patient.getSchedule().findAvailability(ctSimForScan.getDate(), ctSimForScan.duration());
+			Activity ctSimForPatient = ctSimForScan.clone();
+			ctSimForPatient.setActivityEvent(new ArrivalCTSim());
+			if(freeForCTSim==null){
+				System.out.println();
+			}
+			freeForCTSim.getActivity().insert(ctSimForPatient);
+			patient.getPlannedStepsPreTreatment().add(ctSimForPatient);
+		}
+		
+		//only remains to program the other treatments
+		this.programOtherTreatments(firstTreatmentForPatient, (TreatmentMachine)firstTreatmentForMachine.getiSchedule());
 	}
 	
 	private void programOtherTreatments(Activity firstTreatmentForPatient,
@@ -330,7 +322,7 @@ public class Technologist implements ISchedule{
 		Patient patient = (Patient) firstTreatmentForPatient.getiSchedule();
 		Date date = firstTreatmentForPatient.getDate();
 		int duration = firstTreatmentForPatient.duration();
-		ArrayList<TreatmentMachine> adequateMachine = new ArrayList<>();
+		boolean isLast = false;
 		for(int i=1;i<patient.getNbTreatments();i++){
 			if(patient.getPriority()==Priority.P3 || patient.getPriority()==Priority.P4){
 				date = date.increaseWeekend();
@@ -338,56 +330,14 @@ public class Technologist implements ISchedule{
 			else{
 				date = date.increase();
 			}
-			int start = date.getMinute();
-			Activity freeActMachine = machine.getSchedule().findFreeActivityToInsertOtherActivity(date, duration);
-			if (freeActMachine == null){
-				for (TreatmentMachine treatmentMachine : patient.getCenter().getTreatmentMachines()) {
-					if(treatmentMachine.getTreatmentTechnics().contains(patient.getTreatmentTechnic())){
-						adequateMachine.add(treatmentMachine);
-						freeActMachine = treatmentMachine.getSchedule().findFreeActivityToInsertOtherActivity(date, duration);
-						if(freeActMachine!=null){
-							break;
-						}
-					}
-				}
-				if (freeActMachine == null){
-					freeActMachine = machine.getSchedule().getFirstAvailabilityInDay(duration,BlockType.Treatment, date); //this freeAct is obviously more than a day in the future, so we can schedule the treatment starting at the same time as freeAct
-					if (freeActMachine == null){
-						for (TreatmentMachine treatmentMachine : adequateMachine) {
-							freeActMachine = treatmentMachine.getSchedule().getFirstAvailabilityInDay(duration, BlockType.Treatment, date);
-						}
-						if (freeActMachine == null){
-							freeActMachine = this.findOvertimeFreeActivity(machine, date, duration);
-							if(freeActMachine==null){
-								for (TreatmentMachine treatmentMachine : adequateMachine) {
-									freeActMachine = this.findOvertimeFreeActivity(treatmentMachine, date, duration);
-								}
-								if (freeActMachine==null){
-									//TODO treat those cases
-									//System.out.println("issue");
-									break;
-								}
-							}
-						}
-					}
-					start = freeActMachine.getStart();
-				}
-
+			if (i == patient.getNbTreatments() - 1) {
+				isLast = true;
 			}
-			Treatment treatmentEvent = new Treatment (patient);
-			Activity treatmentForMachine= new Activity(start, duration, ActivityType.Treatment, treatmentEvent);
-			if(i==patient.getNbTreatments()-1){
-				treatmentEvent.setLast(true);
-			}
-			freeActMachine.insert(treatmentForMachine);
-			Activity treatmentForPatient = treatmentForMachine.clone();
-			TreatmentMachine treatmentMachine = (TreatmentMachine) treatmentForMachine.getiSchedule();
-			treatmentForPatient.setActivityEvent(new ArrivalTreatment(treatmentMachine));
-			Activity freeActPatient = patient.getSchedule().findFreeActivityToInsertOtherActivity(treatmentForPatient.getDate(), duration);
-			freeActPatient.insert(treatmentForPatient);
-			patient.getPlannedStepsTreatments().add(treatmentForPatient);
+			scheduleTreatment(patient, machine, date, duration, isLast);
 		}
 	}
+	
+
 
 	private static ArrayList<Activity> nullList(int i){
 		ArrayList<Activity> nullList = new ArrayList<>(i);
@@ -399,9 +349,10 @@ public class Technologist implements ISchedule{
 
 	private ArrayList<Activity> searchCTSims(Patient patient,
 			Date dateFirstTreatment, boolean relaxingConstraintFirstTreatmentCTSim) {
-		Date now  = Date.dateNow();
+		dateFirstTreatment.decreaseMinute();
+		Date now  = Date.now();
 		int duration = 30;
-		int nbCTSims = patient.getImageryTechnics().size();
+		int nbCTSims = patient.getScanTechnics().size();
 		ArrayList<Activity> CTSims = Technologist.nullList(nbCTSims);
 		LinkedList<Integer> list = new LinkedList<>();
 		for(int i=0;i<nbCTSims;i++){
@@ -415,10 +366,11 @@ public class Technologist implements ISchedule{
 		Date dateLowerBound = now.compareTo(dateFirstTreatmentDecreased)==-1 ? dateFirstTreatmentDecreased : now;
 		if(relaxingConstraintFirstTreatmentCTSim){
 			dateLowerBound = now;
-		} 
+		}
 		Date dateUpperBound = dateFirstTreatment;
-		Date dateLBCopy = dateLowerBound.clone();
-		Date dateUBCopy = dateUpperBound.clone();
+		Date dateLBCopy1 = dateLowerBound.clone();
+		Date dateUBCopy1 = dateUpperBound.clone();
+		Date dateLBCopy2 = dateLowerBound.clone();
 		
 		ArrayList<BlockType> blockTypesP3P4 = new ArrayList<>();
 		blockTypesP3P4.add(BlockType.Scan);
@@ -429,56 +381,60 @@ public class Technologist implements ISchedule{
 		daysForbidden.add(5);
 		daysForbidden.add(6);
 		
-		
 		for (LinkedList<Integer> order : allPerms) {
-			for(int i=0;i<nbCTSims;i++){
-				ScanTechnic scanTechnic = patient.getImageryTechnics().get(order.get(i));
-				tmp = null;
-				best = null;
-				for (Scan scan : this.getCenter().getScans()) {
-					if(scanTechnic==scan.getImageryTechnic()){
-						if(patient.getPriority()==Priority.P3 || patient.getPriority()==Priority.P4){
-							tmp = scan.getSchedule().getFirstAvailability(duration, blockTypesP3P4, daysForbidden, CTSims, dateLowerBound, dateUpperBound);
-						}
-						else if (patient.getPriority()==Priority.P1 || patient.getPriority()==Priority.P2){
-							tmp = scan.getSchedule().getFirstAvailability(duration, blockTypesP1P2, daysForbidden, CTSims, dateLowerBound, dateUpperBound);
-						}
-						if(best==null || (tmp!=null && tmp.compareTo(best)<=-1)){
-							best = tmp;
-						}
-					}
-				}
-				if(best==null){
-					for (Activity activity : CTSims) {
-						if(activity!=null){
-							activity.delete();
+			dateLBCopy2 = dateLBCopy1;
+			while(CTSims.contains(null) && dateLBCopy2.compareTo(dateUBCopy1)<=0){
+				dateLowerBound = dateLBCopy2;
+				dateUpperBound = dateUBCopy1;
+				for(int i=0;i<nbCTSims;i++){
+					ScanTechnic scanTechnic = patient.getScanTechnics().get(order.get(i));
+					tmp = null;
+					best = null;
+					for (Scan scan : this.getCenter().getScans()) {
+						if(scanTechnic==scan.getImageryTechnic()){
+							if(patient.getPriority()==Priority.P3 || patient.getPriority()==Priority.P4){
+								tmp = scan.getSchedule().findFirstAvailability(ActivityType.CTSim, duration, blockTypesP3P4, daysForbidden, CTSims, dateLowerBound, dateUpperBound);
+							}
+							else if (patient.getPriority()==Priority.P1 || patient.getPriority()==Priority.P2){
+								tmp = scan.getSchedule().findFirstAvailability(ActivityType.CTSim, duration, blockTypesP1P2, daysForbidden, CTSims, dateLowerBound, dateUpperBound);
+							}
+							if(best==null || (tmp!=null && tmp.compareTo(best)<=-1)){
+								best = tmp;
+							}
 						}
 					}
-					CTSims = Technologist.nullList(nbCTSims);
-					dateLowerBound = dateLBCopy;
-					dateUpperBound = dateUBCopy;
-					break;
-				}
-				else{
-					Activity ctSim = new Activity(best.getStart(), duration, ActivityType.CTSim, new CTSim(patient));
-					best.getActivity().insert(ctSim);
-					CTSims.set(i, ctSim);
-					
-					//The following scans have to be scheduled on the same day as the first scan found
-					if(!ctSim.getDate().sameWeekAndDayAs(dateLowerBound)){
-						dateLowerBound = ctSim.getDate();
-						dateLowerBound.setMinute(0);
+					if(best==null){
+						for (Activity activity : CTSims) {
+							if(activity!=null){
+								activity.delete();
+							}
+						}
+						CTSims = Technologist.nullList(nbCTSims);
+						dateLBCopy2 = dateLBCopy2.increase(); 
+						dateLBCopy2.setMinute(0);
+						break;
 					}
-					if(!ctSim.getDate().sameWeekAndDayAs(dateUpperBound)){
-						dateUpperBound = ctSim.getDate();
-						dateUpperBound.setMinute(24*60-1);
-					}
-					
-					if(!CTSims.contains(null)){
-						Collections.sort(CTSims);
-						CTSim lastCtsim = (CTSim) CTSims.get(CTSims.size()-1).getActivityEvent();
-						lastCtsim.setLast(true);
-						return CTSims;
+					else{
+						Activity ctSim = new Activity(best.getStart(), duration, ActivityType.CTSim, new CTSim(patient));
+						best.getActivity().insert(ctSim);
+						CTSims.set(i, ctSim);
+						
+						//The following scans have to be scheduled on the same day as the first scan found
+						if(!ctSim.getDate().checkSameWeekAndDayAs(dateLowerBound)){
+							dateLowerBound = ctSim.getDate();
+							dateLowerBound.setMinute(0);
+						}
+						if(!ctSim.getDate().checkSameWeekAndDayAs(dateUpperBound)){
+							dateUpperBound = ctSim.getDate();
+							dateUpperBound.setMinute(24*60-1);
+						}
+						
+						if(!CTSims.contains(null)){
+							Collections.sort(CTSims);
+							CTSim lastCtsim = (CTSim) CTSims.get(CTSims.size()-1).getActivityEvent();
+							lastCtsim.setLast(true);
+							return CTSims;
+						}
 					}
 				}
 			}
@@ -507,7 +463,7 @@ public class Technologist implements ISchedule{
 		
 		for (TreatmentMachine treatmentMachine : this.getCenter().getTreatmentMachines()) {
 			if(treatmentMachine.getTreatmentTechnics().contains(patient.getTreatmentTechnic())){
-				tmp = treatmentMachine.getSchedule().getFirstAvailability(duration, blockTypeTreatment, days456Forbidden, dateLowerBound);
+				tmp = treatmentMachine.getSchedule().findFirstAvailability(ActivityType.FirstTreatment, duration, blockTypeTreatment, days456Forbidden, dateLowerBound);
 				if(best==null || (best!=null && tmp.compareTo(best)<=0)){
 					best = tmp;
 				}
@@ -516,10 +472,10 @@ public class Technologist implements ISchedule{
 		if(best != null && best.getDate().compareTo(patient.getDeadLine())==1){
 			for (TreatmentMachine treatmentMachine : appropriateMachines) {
 				if(patient.getPriority()==Priority.P1 || patient.getPriority()==Priority.P2){
-					tmp = treatmentMachine.getSchedule().getFirstAvailability(duration, blockTypeReserved, days56Forbidden, dateLowerBound);
+					tmp = treatmentMachine.getSchedule().findFirstAvailability(ActivityType.FirstTreatment, duration, blockTypeReserved, days56Forbidden, dateLowerBound);
 				}
 				else{
-					tmp = treatmentMachine.getSchedule().getFirstAvailability(duration, blockTypeTreatment, days56Forbidden, dateLowerBound);
+					tmp = treatmentMachine.getSchedule().findFirstAvailability(ActivityType.FirstTreatment, duration, blockTypeTreatment, days56Forbidden, dateLowerBound);
 				}
 				if(best==null || (best!=null && tmp.compareTo(best)<=0)){
 					best = tmp;

@@ -6,29 +6,34 @@ import medical.Patient;
 import medical.Priority;
 import scheduling.Date;
 import tools.Time;
+import umontreal.iro.lecuyer.randvar.ExponentialGen;
 import umontreal.iro.lecuyer.randvar.RandomVariateGen;
+import umontreal.iro.lecuyer.rng.MRG32k3a;
 
 public class ReferredPatient extends ActivityEvent{
 	/**
 	 * To generate the delay in between two patients arrivals
 	 */
-	RandomVariateGen genRef;
 	private Center center;
+	/**
+	 * To generate the delay in between two patients arrivals
+	 */
+	public static RandomVariateGen genReferredPatient=new ExponentialGen(new MRG32k3a(), 1.16);
 	
-	public ReferredPatient(RandomVariateGen genRef, Center center) {
+	public ReferredPatient(Center center) {
 		super();
-		this.genRef = genRef;
 		this.center = center;
 	}
 
 	public void childActions() {
 		if(center.isWelcome()){
-			new ReferredPatient(genRef, center).schedule(delay); // Next referred patient
+			new ReferredPatient(center).schedule(delay); // Next referred patient
 		}
 		Patient patient = new Patient(center);
 		center.getPatients().add(patient);
-		System.out.println("Referred patient ; patient id : "+patient.getId()+" with prio : "+patient.getPriority()+", min : "+Time.minIntoTheDay(Time.time()));
-		patient.setReferredDate(Date.dateNow());
+		center.getPatients().statSize().update();
+//		System.out.println("Referred patient ; patient id : "+patient.getId()+" with prio : "+patient.getPriority()+", min : "+Time.minIntoTheDay(Time.now()));
+		patient.setReferredDate(Date.now());
 		if(patient.getPriority() == Priority.P1 || patient.getPriority() == Priority.P2  ){
 			for (ChefSphere chef : center.getChefSpheres()) {
 				/*
@@ -36,7 +41,7 @@ public class ReferredPatient extends ActivityEvent{
 				 */
 				if(chef.getSphere().getCancer()==patient.getCancer()){
 					patient.setSphere(chef.getSphere());
-					chef.processUrgentDemands(patient);
+					chef.processDemands(patient);
 					break;
 				}
 			}
@@ -52,14 +57,14 @@ public class ReferredPatient extends ActivityEvent{
 
 	@Override
 	public ActivityEvent clone() {
-		ReferredPatient clone = new ReferredPatient(genRef, center);
+		ReferredPatient clone = new ReferredPatient(center);
 		clone.setActivity(this.getActivity());
 		return clone;
 	}
 
 	@Override
 	public void generateDelay() {
-		this.delay=(int)(genRef.nextDouble()*60);
+		this.delay=(int)(genReferredPatient.nextDouble()*60);
 	}
 
 }

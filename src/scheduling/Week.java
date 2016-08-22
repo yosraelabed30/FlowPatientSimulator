@@ -1,6 +1,5 @@
 package scheduling;
 
-import medical.Center;
 /**
  * Week in a schedule
  * @author Joffrey
@@ -23,11 +22,11 @@ public class Week implements Comparable<Week>{
 	 * Array of the 7 days of the week
 	 */
 	private Day[] days;
-	private int quotas=13; //TODO change that to 3 for a realistic value (but right now we have more patient referred than in reality)
-	
-	public Week(int weekId, Day[] days){
-		this(null, weekId, days);
-	}
+	/**
+	 * Quotas of allowed consultations for an oncologist for this week
+	 * TODO change that to 3 for a realistic value (but right now we have more patient referred than in reality)
+	 */
+	private int quotas=14;
 	
 	public Week(Schedule schedule, int weekId, Day[] days) {
 		
@@ -105,8 +104,6 @@ public class Week implements Comparable<Week>{
 		return res;
 	}
 	
-
-
 	@Override
 	public int compareTo(Week w) {
 		int res;
@@ -130,6 +127,9 @@ public class Week implements Comparable<Week>{
 		this.quotas = quotas;
 	}
 	
+	/**
+	 * Decreases the quotas for consulation of the week
+	 */
 	public void decreaseQuotas(){
 		if(quotas==0){
 			System.out.println("Abnormal attempt to decrease quotas");

@@ -1,5 +1,7 @@
 package scheduling;
 
+import tools.Time;
+
 public class Availability implements Comparable<Availability>{
 	private Activity activity;
 	private int start;
@@ -51,8 +53,12 @@ public class Availability implements Comparable<Availability>{
 	}
 	
 	public Date getDate(){
-		Date date = this.getActivity().getDate();
+		Date date = this.getActivity().getDate().clone();
 		date.setMinute(start);
 		return date;
+	}
+	
+	public int duration(){
+		return Time.duration(this.getStart(), this.getEnd());
 	}
 }

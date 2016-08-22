@@ -7,13 +7,11 @@ import tools.Time;
 
 public class PreConsultation extends ActivityEvent{
 	private Patient patient;
-	private boolean alreadyChecked;
 	private AdminAgent adminAgent; //is absolutely useless in this version
 	
-	public PreConsultation(Patient patient, boolean alreadyChecked, AdminAgent adminAgent) {
+	public PreConsultation(Patient patient, AdminAgent adminAgent) {
 		super();
 		this.patient=patient;
-		this.setAlreadyChecked(alreadyChecked);
 		this.setAdminAgent(adminAgent);
 	}
 
@@ -22,10 +20,10 @@ public class PreConsultation extends ActivityEvent{
 		/*
 		 * Display some data in console to check
 		 */
-		int time = Time.time();
+		int time = Time.now();
 		int min = Time.minIntoTheDay(time);
-		System.out.println("PreConsultation : checking if patient id : "+getPatient().getId()+" with priority "+getPatient().getPriority()+" is present : "+getPatient().isPresent()+", at min : "+min+", with doctor id : "+getPatient().getDoctor().getId());
-		if(getPatient().isPresent()){
+//		System.out.println("PreConsultation : checking if patient id : "+getPatient().getId()+" with priority "+getPatient().getPriority()+" is present : "+getPatient().isPresentInCenter()+", at min : "+min+", with doctor id : "+getPatient().getDoctor().getId());
+		if(getPatient().isPresentInCenter()){
 			//schedule the pre-consultation event
 			getPatient().getSteps().add(this.getActivity());
 			new Consultation(this.patient).schedule(0);
@@ -34,14 +32,6 @@ public class PreConsultation extends ActivityEvent{
 			getActivity().setStatus(ActivityStatus.ToPostpone);
 			getPatient().getDoctor().getSchedule().doNextTask();
 		}
-	}
-
-	public boolean isAlreadyChecked() {
-		return alreadyChecked;
-	}
-
-	public void setAlreadyChecked(boolean alreadyChecked) {
-		this.alreadyChecked = alreadyChecked;
 	}
 
 	public AdminAgent getAdminAgent() {
@@ -54,7 +44,7 @@ public class PreConsultation extends ActivityEvent{
 
 	@Override
 	public ActivityEvent clone() {
-		PreConsultation clone = new PreConsultation(getPatient(), alreadyChecked, adminAgent);
+		PreConsultation clone = new PreConsultation(getPatient(), adminAgent);
 		clone.setActivity(this.getActivity());
 		return clone;
 	}

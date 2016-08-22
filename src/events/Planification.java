@@ -24,16 +24,16 @@ public class Planification extends ActivityEvent{
 		 * The postConsultation is now done
 		 */
 		// We assign a file to a technologist
-		int time = Time.time();
+		int time = Time.now();
 		int min = Time.minIntoTheDay(time);
 		System.out.println("Planification ; PostConsultation, Consultation and PreConsultation done for patient id : "+this.getPatient().getId()+" with priority "+patient.getPriority()+", at minute : "+min+", with doctor id : "+patient.getDoctor().getId());
 		if (patient.getPriority()==Priority.P1 || patient.getPriority()==Priority.P2){
-			patient.getCenter().getTechnologist().processFileForPlanification(patient);
+			patient.getSphere().getCenter().getTechnologist().processFileForPlanification(patient);
 		}
 		else if (patient.getPriority()==Priority.P3 || patient.getPriority()==Priority.P4){
-			patient.getCenter().getTechnologist().getFilesForCTSimTreatment().add(this.getPatient());
+			patient.getSphere().getCenter().getTechnologist().getFilesForCTSimTreatment().add(this.getPatient());
 		}
-		patient.setPresent(false);
+		patient.setPresentInCenter(false);
 		getPatient().getSchedule().doNextTask();
 	}
 

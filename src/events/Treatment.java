@@ -21,13 +21,13 @@ public class Treatment extends ActivityEvent{
 	public void childActions() {
 		TreatmentMachine machine = (TreatmentMachine) this.getiSchedule();
 		String msg = "";
-		if(patient.isPresent()){
+		if(patient.isPresentInCenter()){
 			patient.getSteps().add(this.getActivity());
-			patient.setPresent(false);
+			patient.setPresentInCenter(false);
 			patient.getSchedule().doNextTask();
 			this.getSchedule().doNextTask();
 			if(last){
-				patient.setOut(true);
+				patient.toPatientsOut();
 				msg+="Last ";
 				
 				//TODO remove that, only for show
@@ -41,12 +41,12 @@ public class Treatment extends ActivityEvent{
 				}
 				
 			}
-			msg += "Treatment ; patient id: "+patient.getId()+", prio : "+patient.getPriority()+", with treatmentmachine : "+machine.getId()+", at min : "+Time.minIntoTheDay(Time.time());
+			msg += "Treatment ; patient id: "+patient.getId()+", prio : "+patient.getPriority()+", with treatmentmachine : "+machine.getId()+", at min : "+Time.minIntoTheDay(Time.now());
 		}
 		else{
-			msg += "Treatment ; NOT HERE patient id: "+patient.getId()+", prio : "+patient.getPriority()+", with treatmentmachine : "+machine.getId()+", at min : "+Time.minIntoTheDay(Time.time());
+			msg += "Treatment ; NOT HERE patient id: "+patient.getId()+", prio : "+patient.getPriority()+", with treatmentmachine : "+machine.getId()+", at min : "+Time.minIntoTheDay(Time.now());
 		}
-		System.out.println(msg);
+//		System.out.println(msg);
 	}
 
 	@Override

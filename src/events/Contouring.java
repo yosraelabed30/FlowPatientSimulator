@@ -8,8 +8,12 @@ import medical.Patient;
 import medical.Priority;
 import medical.Technologist;
 import tools.Time;
+import umontreal.iro.lecuyer.randvar.RandomVariateGen;
+import umontreal.iro.lecuyer.randvar.UniformGen;
+import umontreal.iro.lecuyer.rng.MRG32k3a;
 
 public class Contouring extends ActivityEvent {
+	public static RandomVariateGen genContouringUnif =new UniformGen(new MRG32k3a(),0,1);
 
 	public Contouring() {
 		super();
@@ -21,17 +25,15 @@ public class Contouring extends ActivityEvent {
 		LinkedList<Patient> filesForContouring = doctor.getFilesForContouring();
 		LinkedList< Patient> filesForDosi = Dosimetrist.getFilesForDosi();
 		int numberOfFilesTreated =0;
-		int time = Time.time();
+		int time = Time.now();
 		int min = Time.minIntoTheDay(time);
 		
 		while (!filesForContouring.isEmpty() && numberOfFilesTreated <= 4) {
 			Patient patient = filesForContouring.poll();
-//			System.out.println("The folder of the patient id : " + patient.getId() + " with priority "
-//					+ patient.getPriority() + " is supported for the Contouring " + min+", nb of files processed today by this doc : "+numberOfFilesTreated);
 			filesForDosi.add(patient);
 			numberOfFilesTreated++;
 		}
-		System.out.println("Contouring ; done by doctor id : "+doctor.getId()+", at min : "+min);
+//		System.out.println("Contouring ; done by doctor id : "+doctor.getId()+", at min : "+min);
 		doctor.getSchedule().doNextTask();
 	}
 
@@ -46,9 +48,9 @@ public class Contouring extends ActivityEvent {
 	public void generateDelay(Patient patient) {
 		
 		if (patient.getPriority() == Priority.P1 || patient.getPriority() == Priority.P1) {
-			this.delay = (int) (30+ Math.random() * 60 - 30);
+			this.delay = (int) (30+ genContouringUnif.nextDouble() * 60 - 30);
 		} else {
-			this.delay = (int) (60 + Math.random() * (180 - 60));
+			this.delay = (int) (60 + genContouringUnif.nextDouble() * (180 - 60));
 		}
 	}
 	

@@ -4,6 +4,12 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 
+import umontreal.iro.lecuyer.randvar.RandomVariateGen;
+import umontreal.iro.lecuyer.randvar.UniformGen;
+import umontreal.iro.lecuyer.rng.MRG32k3a;
+import umontreal.iro.lecuyer.rng.RandomPermutation;
+import umontreal.iro.lecuyer.rng.RandomStream;
+
 public enum ScanTechnic {
 	CTScan3D(0),
 	CTScan4D(1),
@@ -11,6 +17,8 @@ public enum ScanTechnic {
 	DEST3D(3),
 	DEST4D(4),
 	TEP(5);
+	public static RandomStream rndStreamScanTech =new MRG32k3a();
+	
 	private int index ;
 	private ScanTechnic( int index ) {
 		this.setIndex(index) ;
@@ -27,9 +35,8 @@ public enum ScanTechnic {
 	}
 	
 	public static ArrayList<ScanTechnic> generateScanTechnic(int nbOfTechnics){
-
-		ArrayList<ScanTechnic> list = new ArrayList<ScanTechnic>(Arrays.asList(ScanTechnic.values()));
-		Collections.shuffle(list);
-		return new ArrayList<ScanTechnic> (list.subList(0, nbOfTechnics));
+		ScanTechnic[] values =  ScanTechnic.values();
+		RandomPermutation.shuffle(values, rndStreamScanTech);
+		return new ArrayList<ScanTechnic> (Arrays.asList(values).subList(0, nbOfTechnics));
 	}
 }

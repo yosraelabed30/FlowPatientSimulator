@@ -1,0 +1,4 @@
+0	poumon	15
+1	coeur	10
+2	cerveau	5
+3	sein	70

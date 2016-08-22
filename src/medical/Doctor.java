@@ -14,22 +14,23 @@ import scheduling.ISchedule;
 import scheduling.Schedule;
 import scheduling.Week;
 import tools.Time;
+import umontreal.iro.lecuyer.randvar.RandomVariateGen;
+import umontreal.iro.lecuyer.randvar.UniformGen;
+import umontreal.iro.lecuyer.rng.MRG32k3a;
 import fileComparators.FileComparator1;
 
 public class Doctor implements ISchedule {
 	static private int doctorClassId = 0;
 	private int id;
+	private Schedule schedule;
 	private ArrayList<Sphere> spheres;
 	private ArrayList<Patient> folders;
 	private LinkedList<Patient> filesForContouring;
 	private LinkedList<Patient> filesForPlanTreatment;
-	private Schedule schedule;
 	private boolean overTime;
-	private Center center;
+	public static RandomVariateGen genDoctorUnif =new UniformGen(new MRG32k3a(),0,1);
 
-	public Doctor(ArrayList<ArrayList<Block>> blocksTab, ArrayList<Sphere> spheres, Center center) {
-
-		this.setCenter(center);
+	public Doctor(ArrayList<ArrayList<Block>> blocksTab, ArrayList<Sphere> spheres) {
 		this.id = doctorClassId++;
 		this.spheres = spheres;
 		this.folders = new ArrayList<>();
@@ -42,7 +43,7 @@ public class Doctor implements ISchedule {
 			}
 			getSchedule().getDefaultWeek().getDay(i).setBlocks(blocksTab.get(i));
 		}
-		if (Math.random() > 0.5) {
+		if (genDoctorUnif.nextDouble() > 0.5) {
 			this.setOverTime(true);
 
 		} else {
@@ -80,7 +81,7 @@ public class Doctor implements ISchedule {
 	public boolean isRadiotherapyNeeded(Patient patient) {
 
 		boolean need = true;
-		if (Math.random() <= 0.75) {
+		if (genDoctorUnif.nextDouble() <= 0.75) {
 			need = true;
 		} 
 		else {
@@ -98,13 +99,13 @@ public class Doctor implements ISchedule {
 
 	public ArrayList<ScanTechnic> decidesImageryTechnics(Patient patient) {
 
-		int index = (int) ((int) 1 + (Math.random() * (3 - 1)));
+		int index = (int) ((int) 1 + (genDoctorUnif.nextDouble()* (3 - 1)));
 		
 		return ScanTechnic.generateScanTechnic(index);
 	}
 
 	public int decidesNbTreatments(Patient patient) {
-		int nbTreatments = (int) ((int) 8 + (Math.random() * (40 - 8)));
+		int nbTreatments = (int) ((int) 8 + (genDoctorUnif.nextDouble() * (40 - 8)));
 		return nbTreatments;
 	}
 
@@ -143,14 +144,6 @@ public class Doctor implements ISchedule {
 
 	public void setSpheres(ArrayList<Sphere> spheres) {
 		this.spheres = spheres;
-	}
-
-	public Center getCenter() {
-		return center;
-	}
-
-	public void setCenter(Center center) {
-		this.center = center;
 	}
 
 	public LinkedList<Patient> getFilesForPlanTreatment() {

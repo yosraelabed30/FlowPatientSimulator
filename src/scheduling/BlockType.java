@@ -1,8 +1,7 @@
 package scheduling;
 
 public enum BlockType {
-	
-	NotWorking(),
+	OverTime(),
 	Consultation(),
 	Relance(),
 	Contouring(),
@@ -10,11 +9,6 @@ public enum BlockType {
     Reserved(),
     Dosimetry(),
     Treatment(),
-    
-	All(), 
-	
+	All(), 	
 	Scan();
-	
-
-
 }

@@ -19,7 +19,7 @@ public class VerificationDosi extends ActivityEvent{
 	public void childActions() {
 		LinkedList<Patient> filesForVerif = Dosimetrist.getFilesForVerif();
 		int numberOfFilesTreated = 0;
-		int time = Time.time();
+		int time = Time.now();
 		int min = Time.minIntoTheDay(time);
 			
 		while (!filesForVerif.isEmpty() && numberOfFilesTreated <= 4) {
@@ -27,14 +27,10 @@ public class VerificationDosi extends ActivityEvent{
 			Doctor doctor = patient.getDoctor();
 			LinkedList<Patient> filesForPlanTreatment = doctor
 					.getFilesForPlanTreatment();
-//			System.out.println("The folder of the patient id : "
-//					+ patient.getId() + " with priority "
-//					+ patient.getPriority()
-//					+ " is supported for the verification " + min);
 			filesForPlanTreatment.add(patient);
 			numberOfFilesTreated++;
 		}
-		System.out.println("VerificationDosi ; done");
+//		System.out.println("VerificationDosi ; done");
 		dosimetrist.getSchedule().doNextTask();
 	}
 	

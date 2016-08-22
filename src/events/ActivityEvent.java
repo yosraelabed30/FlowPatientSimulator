@@ -29,19 +29,6 @@ public abstract class ActivityEvent extends Event{
 		this.setDelay(-1);
 	}
 	
-	@Override
-	public void actions() {
-		if(this.getDelay()==-1){
-			this.generateDelay();
-		}
-		if(activity!=null){ 
-			activity.setStatus(ActivityStatus.Done);
-		}
-		childActions();
-	}
-	
-	public abstract void childActions();
-
 	public Activity getActivity() {
 		return activity;
 	}
@@ -50,13 +37,6 @@ public abstract class ActivityEvent extends Event{
 		this.activity = activity;
 	}
 	
-	/**
-	 * Each ActivityEvent child class has its own impletementation of that method.
-	 */
-	public abstract ActivityEvent clone();
-
-	public abstract void generateDelay();
-
 	public int getDelay() {
 		return delay;
 	}
@@ -112,4 +92,24 @@ public abstract class ActivityEvent extends Event{
 	public void setLateness(int lateness) {
 		this.lateness = lateness;
 	}
+	
+	@Override
+	public void actions() {
+		if(this.getDelay()==-1){
+			this.generateDelay();
+		}
+		if(activity!=null){ 
+			activity.setStatus(ActivityStatus.Done);
+		}
+		childActions();
+	}
+	
+	public abstract void childActions();
+	
+	/**
+	 * Each ActivityEvent child class has its own impletementation of that method.
+	 */
+	public abstract ActivityEvent clone();
+
+	public abstract void generateDelay();
 }

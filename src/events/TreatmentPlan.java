@@ -19,15 +19,13 @@ public class TreatmentPlan extends ActivityEvent{
 		LinkedList<Patient> filesForPlanTreatment = doctor.getFilesForPlanTreatment();
 	
 		int numberOfFilesTreated =0;
-		int time = Time.time();
+		int time = Time.now();
 		int min = Time.minIntoTheDay(time);
 		while (!filesForPlanTreatment.isEmpty() && numberOfFilesTreated <= 4) {
 			Patient patient = filesForPlanTreatment.poll();
-//			System.out.println("The folder of the patient id : " + patient.getId() + " with priority "
-//					+ patient.getPriority() + " is supported for the Contouring " + min);
-//			numberOfFilesTreated++;
+			numberOfFilesTreated++;
 		}
-		System.out.println("TreatmentPlan ; done by doctor id : "+doctor.getId());
+//		System.out.println("TreatmentPlan ; done by doctor id : "+doctor.getId());
 		doctor.getSchedule().doNextTask();
 	}
 

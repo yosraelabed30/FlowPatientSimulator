@@ -15,13 +15,9 @@ public class Idle extends ActivityEvent{
 
 	@Override
 	public void childActions() {
-//		if(this.getSchedule()==null){
-//			int now = Time.minIntoTheDay(Time.time());
-//			System.out.println("time : "+now+", activity id : "+this.getActivity().getActivityId());
-//		}
 		this.getSchedule().setCurrentActivityBeingDone(this.getActivity());
 		getEnd().schedule(delay);
-		int now = Time.minIntoTheDay(Time.time());
+		int now = Time.minIntoTheDay(Time.now());
 //		System.out.println("Idle : Time : "+now+", end supposedly at : "+(delay+now)+", activity id : "+this.getActivity().getActivityId());
 	}
 	
@@ -37,11 +33,9 @@ public class Idle extends ActivityEvent{
 
 	@Override
 	public void generateDelay() {
-		int now = Time.time();
+		int now = Time.now();
 		int min = Time.minIntoTheDay(now);
 		this.delay = Math.max(0, Math.max(min, this.getActivity().getEnd())-min);
-
-//		System.out.println("Idle generateDelay : Time : "+min+", end supposedly at : "+(delay+min)+", activity id : "+this.getActivity().getActivityId());
 	}
 	
 	public Event getEnd() {
@@ -62,9 +56,6 @@ public class Idle extends ActivityEvent{
 		@Override
 		public void actions() {
 			Schedule s = getSchedule();
-//			if(s==null){
-//				System.out.println("EndIdle ; time : "+Time.minIntoTheDay(Time.time())+", activity id : "+getActivity().getActivityId());
-//			}
 			getSchedule().setCurrentActivityBeingDone(null);
 			s.doNextTask();
 		}

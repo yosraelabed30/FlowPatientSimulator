@@ -9,6 +9,7 @@ import events.ActivityEvent;
 import events.ArrivalConsultation;
 import events.PreConsultation;
 import events.Idle;
+import tools.Time;
 import umontreal.iro.lecuyer.simevents.Event;
 import umontreal.iro.lecuyer.simevents.Sim;
 
@@ -29,11 +30,11 @@ public class Activity implements Comparable<Activity> {
 	 */
 	private int activityId;
 	/**
-	 * start, in minutes between 0 and 24*60.
+	 * start, in minutes between 0 and 24*60-1.
 	 */
 	private int start;
 	/**
-	 * end, in minutes between 0 and 24*60.
+	 * end, in minutes between 0 and 24*60-1.
 	 */
 	private int end;
 	/**
@@ -90,7 +91,7 @@ public class Activity implements Comparable<Activity> {
 	
 	public Activity(int start, int duration, ActivityType type, ActivityEvent event){
 		this.start=start;
-		this.end = start+duration;
+		this.end = start+duration-1;
 		this.type = type;
 		this.event = event;
 		if(event!=null){
@@ -118,17 +119,18 @@ public class Activity implements Comparable<Activity> {
 	/**
 	 * Should normally be used if this is a free activity
 	 * @param activity
+	 * @return true if this in which we insert has been completely replaced by the activity
 	 */
-	public void insert(Activity activity) {
+	public boolean insert(Activity activity) {
 		Block block = this.getBlock();
 		boolean replacement = false;
 		if(block!=null){
 			if(activity.getStart() == this.getStart() && activity.getEnd() < this.getEnd()){
-				this.setStart(activity.getEnd());
+				this.setStart(activity.getEnd()+1);
 				this.getActivityEvent().cancel(); //the cancel method cancels this event before it occurs. Returns true if cancellation succeeds(this event was found in the list), false otherwise
 			}
 			else if(activity.getEnd() == this.getEnd() && activity.getStart() > this.getStart()){
-				this.setEnd(activity.getStart());
+				this.setEnd(activity.getStart()-1);
 			}
 			else if(activity.getStart() == this.getStart() && activity.getEnd() == this.getEnd()){
 				replacement=true;
@@ -145,8 +147,8 @@ public class Activity implements Comparable<Activity> {
 				 */
 				//TODO see with Yosra, we should schedule only the necessary time in the schedule of the doctor. Or else if he finishes in advance we should know what he should do
 				free2.setStatus(ActivityStatus.NotDone);
-				free2.setStart(activity.getEnd());
-				this.setEnd(activity.getStart());
+				free2.setStart(activity.getEnd()+1);
+				this.setEnd(activity.getStart()-1);
 				block.getActivities().add(free2);
 			}
 			activity.setBlock(block);
@@ -164,6 +166,7 @@ public class Activity implements Comparable<Activity> {
 		else{
 			System.out.println("Activity insert ; the block of the activity in which we want to insert is null");
 		}
+		return replacement;
 	}
 	
 	public boolean isCurrent() {
@@ -223,7 +226,7 @@ public class Activity implements Comparable<Activity> {
 	 */
 	private void merge(Activity activity) {
 		
-		if (this.startsEarlierThan(activity)) {
+		if (this.compareTo(activity)<=0) {
 			this.setEnd(activity.getEnd());
 		} else {
 			System.out.println("this should always be before activity");
@@ -262,11 +265,7 @@ public class Activity implements Comparable<Activity> {
 	}
 
 	public int duration() {
-		return end - start;
-	}
-
-	public boolean startsEarlierThan(Activity earliest) {
-		return this.start <= earliest.start;
+		return Time.duration(start, end);
 	}
 
 	/**
@@ -377,40 +376,73 @@ public class Activity implements Comparable<Activity> {
 	/**
 	 * 
 	 * @param activity
-	 * @return 
+	 * @return arrayList of intervals corresponding to interval1 with interval2 excluded
 	 */
 	private static ArrayList<ArrayList<Integer>> exclude(
 			ArrayList<Integer> interval1, ArrayList<Integer> interval2) {
 		ArrayList<ArrayList<Integer>> res = new ArrayList<>();
 		ArrayList<Integer> remaining1 = new ArrayList<>();
-
-		if(interval2.get(0) == interval1.get(0) && interval2.get(1) == interval1.get(1)){
-			// do nothing
-		} else if (interval2.get(0) <= interval1.get(0)
-				&& interval2.get(1) >= interval1.get(0)
-				&& interval2.get(1) <= interval1.get(1)) {
-			remaining1.add(interval2.get(1));
-			remaining1.add(interval1.get(1));
-			res.add(remaining1);
-		} else if (interval2.get(1) >= interval1.get(1)
-				&& interval2.get(0) >= interval1.get(0)
-				&& interval2.get(0) <= interval1.get(1)) {
-			remaining1.add(interval1.get(0));
-			remaining1.add(interval2.get(0));
-			res.add(remaining1);
-		} else if (interval2.get(0) > interval1.get(0)
-				&& interval2.get(1) < interval1.get(1)) {
-			remaining1.add(interval1.get(0));
-			remaining1.add(interval2.get(0));
-			res.add(remaining1);
-			ArrayList<Integer> remaining2 = new ArrayList<>();
-			remaining2.add(interval2.get(1));
-			remaining2.add(interval1.get(1));
-			res.add(remaining2);
-		} else if (interval2.get(1) < interval1.get(0)
-				|| interval2.get(0) > interval1.get(1)) {
-			remaining1.add(interval1.get(0));
-			remaining1.add(interval1.get(1));
+		
+		if(Time.duration(interval1.get(0), interval1.get(1))==0 && Time.duration(interval2.get(0), interval2.get(1))!=0){
+			if(interval1.get(0)<interval2.get(0) || interval1.get(0)>interval2.get(1)){
+				remaining1.add(interval1.get(0));
+				remaining1.add(interval1.get(1));
+				res.add(remaining1);
+			}
+		}
+		else if (Time.duration(interval2.get(0), interval2.get(1))==0 && Time.duration(interval1.get(0), interval1.get(1))!=0){
+			if(interval2.get(0)==interval1.get(0)){
+				remaining1.add(interval1.get(0));
+				remaining1.add(interval1.get(1));
+				res.add(remaining1);
+			}
+			else if(interval2.get(0)>interval1.get(0) && interval2.get(0)<=interval1.get(1)){
+				remaining1.add(interval1.get(0));
+				remaining1.add(interval1.get(1)-1);
+				res.add(remaining1);
+				ArrayList<Integer> remaining2 = new ArrayList<>();
+				remaining2.add(interval2.get(0));
+				remaining2.add(interval1.get(1));
+				res.add(remaining2);
+			}
+		}
+		else if (Time.duration(interval2.get(0), interval2.get(1))==0 && Time.duration(interval1.get(0), interval1.get(1))==0){
+			if(interval2.get(0)!=interval1.get(0)){
+				remaining1.add(interval1.get(0));
+				remaining1.add(interval1.get(1));
+				res.add(remaining1);
+			}
+		}
+		else{
+			if(interval2.get(0) <= interval1.get(0) && interval2.get(1) >= interval1.get(1)){
+				// res stays empty
+			} else if (interval2.get(0) <= interval1.get(0)
+					&& interval2.get(1) >= interval1.get(0)
+					&& interval2.get(1) < interval1.get(1)) {
+				remaining1.add(interval2.get(1)+1);
+				remaining1.add(interval1.get(1));
+				res.add(remaining1);
+			} else if (interval2.get(1) >= interval1.get(1)
+					&& interval2.get(0) > interval1.get(0)
+					&& interval2.get(0) <= interval1.get(1)) {
+				remaining1.add(interval1.get(0));
+				remaining1.add(interval2.get(0)-1);
+				res.add(remaining1);
+			} else if (interval2.get(0) > interval1.get(0)
+					&& interval2.get(1) < interval1.get(1)) {
+				remaining1.add(interval1.get(0));
+				remaining1.add(interval2.get(0)-1);
+				res.add(remaining1);
+				ArrayList<Integer> remaining2 = new ArrayList<>();
+				remaining2.add(interval2.get(1)+1);
+				remaining2.add(interval1.get(1));
+				res.add(remaining2);
+			} else if (interval2.get(1) < interval1.get(0)
+					|| interval2.get(0) > interval1.get(1)) {
+				remaining1.add(interval1.get(0));
+				remaining1.add(interval1.get(1));
+				res.add(remaining1);
+			}
 		}
 		return res;
 	}
@@ -436,7 +468,7 @@ public class Activity implements Comparable<Activity> {
 			}
 			Collections.sort(noNulls);
 			for (Activity activity : noNulls) {
-				if(activity!=null && this.getDate().sameWeekAndDayAs(activity.getDate())){
+				if(activity!=null && this.getDate().checkSameWeekAndDayAs(activity.getDate())){
 					ArrayList<Integer> activityInterval = new ArrayList<>();
 					activityInterval.add(activity.getStart());
 					activityInterval.add(activity.getEnd());

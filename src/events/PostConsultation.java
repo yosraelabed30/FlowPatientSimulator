@@ -4,7 +4,7 @@ import tools.Time;
 import medical.Patient;
 
 public class PostConsultation extends ActivityEvent{
-	//private Nurse nurse; // TODO check to which technologist the patient file is assigned
+	// TODO check to which technologist the patient file is assigned
 	private Patient patient;
 	
 	public PostConsultation(Patient patient) {
@@ -14,9 +14,8 @@ public class PostConsultation extends ActivityEvent{
 
 	@Override
 	public void childActions() {
-		// TODO Auto-generated method stub
 		//the nurse does the education during this time
-		System.out.println("PostConsultation ; patient id : "+patient.getId()+", doctor id : "+patient.getDoctor().getId()+", at min : "+Time.minIntoTheDay(Time.time()));
+//		System.out.println("PostConsultation ; patient id : "+patient.getId()+", doctor id : "+patient.getDoctor().getId()+", at min : "+Time.minIntoTheDay(Time.time()));
 		getPatient().getDoctor().getSchedule().doNextTask();
 		new Planification(this.getPatient()).schedule(delay);
 	}
@@ -30,7 +29,6 @@ public class PostConsultation extends ActivityEvent{
 
 	@Override
 	public void generateDelay() {
-		// TODO Do sthg representing reality
 		this.delay=30;
 	}
 

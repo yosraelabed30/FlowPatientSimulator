@@ -1,7 +1,6 @@
 package scheduling;
 
 public enum ActivityType {
-	NotWorking(),
 	Free(),
 	Consultation(60),
 	Contouring(20),
@@ -12,22 +11,22 @@ public enum ActivityType {
 	Dosimetry(),
 	Treatment();
 	
-	private int scheduleDuration;
+	private int defaultScheduleDuration;
 	
 	private ActivityType(){
 		this(-1);
 	}
 	
 	private ActivityType(int scheduleDuration) {
-		this.setScheduleDuration(scheduleDuration);
+		this.setDefaultScheduleDuration(scheduleDuration);
 	}
 
-	public int getScheduleDuration() {
-		return scheduleDuration;
+	public int getDefaultScheduleDuration() {
+		return defaultScheduleDuration;
 	}
 
-	public void setScheduleDuration(int scheduleDuration) {
-		this.scheduleDuration = scheduleDuration;
+	public void setDefaultScheduleDuration(int scheduleDuration) {
+		this.defaultScheduleDuration = scheduleDuration;
 	}
 	
 }

@@ -3,8 +3,6 @@ package medical;
 import java.util.ArrayList;
 
 public class Sphere{
-	
-	
 	private Center center;
 	private Cancer cancer;
 	private ChefSphere chefSphere;

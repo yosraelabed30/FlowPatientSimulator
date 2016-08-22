@@ -12,11 +12,11 @@ public class ArrivalCTSim extends ActivityEvent {
 	
 	@Override
 	public void childActions() {
-		int time = Time.time();
+		int time = Time.now();
 		int min = Time.minIntoTheDay(time);
 		Patient patient = (Patient) this.getSchedule().getiSchedule();
-		System.out.println("Arrival CTSim ; Patient id : "+patient.getId()+ " with priority "+patient.getPriority()+" arrived, at min : "+min);
-		patient.setPresent(true);
+//		System.out.println("Arrival CTSim ; Patient id : "+patient.getId()+ " with priority "+patient.getPriority()+" arrived, at min : "+min);
+		patient.setPresentInCenter(true);
 	}
 
 	@Override

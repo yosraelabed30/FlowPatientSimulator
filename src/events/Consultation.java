@@ -22,7 +22,7 @@ public class Consultation extends ActivityEvent{
 		if(radiotherapyNeeded){
 			Doctor doctor = patient.getDoctor();
 			ArrayList<ScanTechnic> imagery = doctor.decidesImageryTechnics(patient);
-			patient.setImageryTechnics(imagery);
+			patient.setScanTechnics(imagery);
 			
 			TreatmentTechnic technic = doctor.decidesTechnic(patient);
 			patient.setTreatmentTechnic(technic);
@@ -32,10 +32,10 @@ public class Consultation extends ActivityEvent{
 			new PostConsultation(this.getPatient()).schedule(delay);
 		}
 		else{
-			patient.setOut(true);
-			int time = Time.time();
+			patient.toPatientsOut();
+			int time = Time.now();
 			int min = Time.minIntoTheDay(time);
-			//System.out.println("consultation done for patient id : "+patient.getId()+", at minute : "+min);
+//			System.out.println("No radiotherapy : consultation done for patient id : "+patient.getId()+" with priority : "+patient.getPriority()+", at minute : "+min);
 			patient.getDoctor().getSchedule().doNextTask();
 		}
 	}
@@ -49,10 +49,6 @@ public class Consultation extends ActivityEvent{
 	public void generateDelay() {
 		//TODO implements something that represents reality
 		this.delay = 30;
-	}
-
-	public static int durationForScheduling() {
-		return 60;
 	}
 
 	public Patient getPatient() {
