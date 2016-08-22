@@ -35,7 +35,7 @@ public class Idle extends ActivityEvent{
 	public void generateDelay() {
 		int now = Time.now();
 		int min = Time.minIntoTheDay(now);
-		this.delay = Math.max(0, Math.max(min, this.getActivity().getEnd())-min);
+		this.delay = Math.max(0, Time.duration(min, Math.max(min, this.getActivity().getEnd())));
 	}
 	
 	public Event getEnd() {

@@ -72,15 +72,14 @@ public class FlowOfPatients {
 		double time = System.currentTimeMillis();
 		FlowOfPatients test = new FlowOfPatients();
 		test.setCenter(test.CHUM());
-//		test.simulateOneRun(525600*2);
+		test.simulateOneRun(525600*2);
 //		test.simulateOneRun(525600);
-		test.simulateOneRun(288000);
+//		test.simulateOneRun(288000);
 //		test.simulateOneRun(100000);
 //		test.simulateOneRun(30000);
 //		test.simulateOneRun(72*60);
 		
 		time = System.currentTimeMillis()-time;
-		System.out.println("time : "+time);
 		
 		int nbPatientTreated = test.getCenter().getPatientsOut().size();
 		int nbPatientNotYetTreated = test.getCenter().getPatients().size();
@@ -94,6 +93,7 @@ public class FlowOfPatients {
 		System.out.println("\n"+test.getCenter().getPatients().statSize().report());
 		System.out.println(test.getCenter().getPatients().statSojourn().report());
 		System.out.println("Statistics, nb of patients for planif : "+Statistics.getNbPatientsForPlanif()+", planned on time : "+Statistics.getPlannedOnTime()+", and late : "+Statistics.getPlannedLate());
+		System.out.println("running time : "+time);
 	}
 
 	/**

@@ -6,6 +6,7 @@ import java.util.LinkedList;
 
 import events.ActivityEvent;
 import medical.Center;
+import medical.Patient;
 import tools.Time;
 import umontreal.iro.lecuyer.simevents.Sim;
 
@@ -125,30 +126,37 @@ public class Schedule {
 	 * do the next task of the day
 	 */
 	public void doNextTask() {
-		int time = (int) Sim.time();
-		int weekId = Time.weekCorrespondingToTime(time);
-		int dayId = Time.weekDayCorrespondingToTime(time);
-		int min = Time.minIntoTheDay(time);
+		if(this.getiSchedule().getClass()!=Patient.class || !((Patient)this.getiSchedule()).isOut()){
+			int time = (int) Sim.time();
+			int weekId = Time.weekCorrespondingToTime(time);
+			int dayId = Time.weekDayCorrespondingToTime(time);
+			int min = Time.minIntoTheDay(time);
+			
+			ArrayList<Block> blocks = null;
+			try {
+				blocks = this.getDay(weekId, dayId).getBlocks();
+			} catch (Exception e) {
+				this.addWeek(weekId);
+				blocks = this.getDay(weekId, dayId).getBlocks();
+			}
 
-		ArrayList<Block> blocks = this.getDay(weekId, dayId).getBlocks();
-
-		int delay = Integer.MAX_VALUE;
-		searchNext: for (Block block : blocks) {
-			for (Activity activity : block.getActivities()) {
-				if (activity.getStatus() == ActivityStatus.NotDone
-						&& activity.getActivityEvent().time() == -10) {
-					if (activity.getActivityEvent().getLateness() != Integer.MAX_VALUE) {
-						delay = Math.max(0, activity.getStart() - min)
-								+ activity.getActivityEvent().getLateness();
-						activity.getActivityEvent().schedule(delay);
-						break searchNext;
-					} else {
-						activity.setStatus(ActivityStatus.ToPostpone);
+			int delay = Integer.MAX_VALUE;
+			searchNext: for (Block block : blocks) {
+				for (Activity activity : block.getActivities()) {
+					if (activity.getStatus() == ActivityStatus.NotDone
+							&& activity.getActivityEvent().time() == -10) {
+						if (activity.getActivityEvent().getLateness() != Integer.MAX_VALUE) {
+							delay = Math.max(0, activity.getStart() - min)
+									+ activity.getActivityEvent().getLateness();
+							activity.getActivityEvent().schedule(delay);
+							break searchNext;
+						} else {
+							activity.setStatus(ActivityStatus.ToPostpone);
+						}
 					}
 				}
 			}
 		}
-
 	}
 
 	/**
@@ -160,7 +168,7 @@ public class Schedule {
 	public Week addWeek(int weekId) {
 		Week res = null;
 		try {
-			this.getWeek(weekId);
+			res = this.getWeek(weekId);
 		} catch (Exception e) {
 			this.defaultWeek.setWeekId(weekId);
 			res = defaultWeek.clone();

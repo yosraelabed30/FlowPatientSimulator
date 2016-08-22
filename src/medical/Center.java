@@ -98,9 +98,7 @@ public class Center {
 
 	public void doScheduleToday() {
 		for (Patient patient : patients) {
-			if(!patient.isOut()){
-				patient.getSchedule().doNextTask();
-			}
+			patient.getSchedule().doNextTask();
 		}
 		for(Doctor doctor : doctors){
 			doctor.getSchedule().doNextTask();

@@ -122,20 +122,43 @@ public class Activity implements Comparable<Activity> {
 	 * @return true if this in which we insert has been completely replaced by the activity
 	 */
 	public boolean insert(Activity activity) {
+
 		Block block = this.getBlock();
 		boolean replacement = false;
+		boolean cancellation = false;
 		if(block!=null){
 			if(activity.getStart() == this.getStart() && activity.getEnd() < this.getEnd()){
 				this.setStart(activity.getEnd()+1);
-				this.getActivityEvent().cancel(); //the cancel method cancels this event before it occurs. Returns true if cancellation succeeds(this event was found in the list), false otherwise
+				if(this.isCurrent() && this.getType()==ActivityType.Free){
+					this.getSchedule().setCurrentActivityBeingDone(null);
+					Idle idle = ((Idle)this.getActivityEvent());
+					idle.getEnd().cancel();
+				}
+				else{
+					cancellation = this.getActivityEvent().cancel(); //the cancel method cancels this event before it occurs. Returns true if cancellation succeeds(this event was found in the list), false otherwise
+				}
 			}
 			else if(activity.getEnd() == this.getEnd() && activity.getStart() > this.getStart()){
 				this.setEnd(activity.getStart()-1);
+				if(this.isCurrent() && this.getType()==ActivityType.Free){
+					Idle idle = ((Idle)this.getActivityEvent());
+					idle.generateDelay();
+					idle.getEnd().reschedule(idle.getDelay());
+				}
 			}
 			else if(activity.getStart() == this.getStart() && activity.getEnd() == this.getEnd()){
 				replacement=true;
 				this.getActivityEvent().cancel();
 				block.getActivities().remove(this);
+				if(this.isCurrent() && this.getType()==ActivityType.Free){
+					this.getSchedule().setCurrentActivityBeingDone(null);
+					Idle idle = ((Idle)this.getActivityEvent());
+					idle.getEnd().cancel();
+				}
+				else{
+					cancellation = this.getActivityEvent().cancel(); //the cancel method cancels this event before it occurs. Returns true if cancellation succeeds(this event was found in the list), false otherwise
+				}
+				this.setBlock(null);
 			}
 			else{
 				Activity free2 = this.clone(); // TODO problem there, the activity cloned has a Done status, so when it's time to do the event associated to that activity, it is ignored. 
@@ -150,18 +173,15 @@ public class Activity implements Comparable<Activity> {
 				free2.setStart(activity.getEnd()+1);
 				this.setEnd(activity.getStart()-1);
 				block.getActivities().add(free2);
+				if(this.isCurrent() && this.getType()==ActivityType.Free){
+					Idle idle = ((Idle)this.getActivityEvent());
+					idle.generateDelay();
+					idle.getEnd().reschedule(idle.getDelay());
+				}
 			}
 			activity.setBlock(block);
 			block.getActivities().add(activity);
 			Collections.sort(block.getActivities());
-			if(this.isCurrent()){
-				Idle idle = ((Idle)this.getActivityEvent());
-				idle.generateDelay();
-				idle.getEnd().reschedule(idle.getDelay());
-			}
-			if(replacement){
-				this.setBlock(null);
-			}
 		}
 		else{
 			System.out.println("Activity insert ; the block of the activity in which we want to insert is null");

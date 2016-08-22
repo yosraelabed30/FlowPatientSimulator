@@ -306,9 +306,6 @@ public class Technologist implements ISchedule{
 			Availability freeForCTSim = patient.getSchedule().findAvailability(ctSimForScan.getDate(), ctSimForScan.duration());
 			Activity ctSimForPatient = ctSimForScan.clone();
 			ctSimForPatient.setActivityEvent(new ArrivalCTSim());
-			if(freeForCTSim==null){
-				System.out.println();
-			}
 			freeForCTSim.getActivity().insert(ctSimForPatient);
 			patient.getPlannedStepsPreTreatment().add(ctSimForPatient);
 		}
