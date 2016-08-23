@@ -72,7 +72,7 @@ public class FlowOfPatients {
 		double time = System.currentTimeMillis();
 		FlowOfPatients test = new FlowOfPatients();
 		test.setCenter(test.CHUM());
-		test.simulateOneRun(525600*2);
+//		test.simulateOneRun(525600*2);
 //		test.simulateOneRun(525600);
 //		test.simulateOneRun(288000);
 //		test.simulateOneRun(100000);

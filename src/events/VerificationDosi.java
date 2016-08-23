@@ -16,7 +16,7 @@ public class VerificationDosi extends ActivityEvent{
 	}
 
 	@Override
-	public void childActions() {
+	public void endActions() {
 		LinkedList<Patient> filesForVerif = Dosimetrist.getFilesForVerif();
 		int numberOfFilesTreated = 0;
 		int time = Time.now();
@@ -43,8 +43,7 @@ public class VerificationDosi extends ActivityEvent{
 
 	@Override
 	public void generateDelay() {
-		// TODO Auto-generated method stub
-		
+		this.setDelay(0);
 	}
 
 	public Dosimetrist getDosimetrist() {
@@ -53,6 +52,17 @@ public class VerificationDosi extends ActivityEvent{
 
 	public void setDosimetrist(Dosimetrist dosimetrist) {
 		this.dosimetrist = dosimetrist;
+	}
+
+	@Override
+	public void startActions() {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public boolean conditions() {
+		return true;
 	}
 
 }

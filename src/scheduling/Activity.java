@@ -132,7 +132,8 @@ public class Activity implements Comparable<Activity> {
 				if(this.isCurrent() && this.getType()==ActivityType.Free){
 					this.getSchedule().setCurrentActivityBeingDone(null);
 					Idle idle = ((Idle)this.getActivityEvent());
-					idle.getEnd().cancel();
+					cancellation = idle.cancel();
+					System.out.println(cancellation);
 				}
 				else{
 					cancellation = this.getActivityEvent().cancel(); //the cancel method cancels this event before it occurs. Returns true if cancellation succeeds(this event was found in the list), false otherwise
@@ -143,7 +144,7 @@ public class Activity implements Comparable<Activity> {
 				if(this.isCurrent() && this.getType()==ActivityType.Free){
 					Idle idle = ((Idle)this.getActivityEvent());
 					idle.generateDelay();
-					idle.getEnd().reschedule(idle.getDelay());
+					idle.reschedule(idle.getDelay());
 				}
 			}
 			else if(activity.getStart() == this.getStart() && activity.getEnd() == this.getEnd()){
@@ -153,7 +154,8 @@ public class Activity implements Comparable<Activity> {
 				if(this.isCurrent() && this.getType()==ActivityType.Free){
 					this.getSchedule().setCurrentActivityBeingDone(null);
 					Idle idle = ((Idle)this.getActivityEvent());
-					idle.getEnd().cancel();
+					cancellation = idle.cancel();
+					System.out.println(cancellation);
 				}
 				else{
 					cancellation = this.getActivityEvent().cancel(); //the cancel method cancels this event before it occurs. Returns true if cancellation succeeds(this event was found in the list), false otherwise
@@ -176,7 +178,7 @@ public class Activity implements Comparable<Activity> {
 				if(this.isCurrent() && this.getType()==ActivityType.Free){
 					Idle idle = ((Idle)this.getActivityEvent());
 					idle.generateDelay();
-					idle.getEnd().reschedule(idle.getDelay());
+					idle.reschedule(idle.getDelay());
 				}
 			}
 			activity.setBlock(block);
@@ -257,7 +259,7 @@ public class Activity implements Comparable<Activity> {
 //			System.out.println("Fusion ; this activity id : "+this.activityId+", activity id : "+activity.getActivityId());
 			Idle idle = ((Idle)this.getActivityEvent());
 			idle.generateDelay();
-			idle.getEnd().reschedule(idle.getDelay());
+			idle.reschedule(idle.getDelay());
 		}
 	}
 	public ActivityType getType() {

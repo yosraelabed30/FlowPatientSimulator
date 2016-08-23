@@ -14,7 +14,7 @@ public class ArrivalTreatment extends ActivityEvent {
 	}
 	
 	@Override
-	public void childActions() {
+	public void endActions() {
 		int time = Time.now();
 		int min = Time.minIntoTheDay(time);
 		Patient patient = (Patient) this.getSchedule().getiSchedule();
@@ -40,6 +40,16 @@ public class ArrivalTreatment extends ActivityEvent {
 
 	public void setTreatmentMachine(TreatmentMachine treatmentMachine) {
 		this.treatmentMachine = treatmentMachine;
+	}
+
+	@Override
+	public void startActions() {
+		// TODO Auto-generated method stub
+	}
+
+	@Override
+	public boolean conditions() {
+		return true;
 	}
 
 }

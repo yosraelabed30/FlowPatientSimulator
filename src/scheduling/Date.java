@@ -121,7 +121,7 @@ public class Date implements Comparable<Date>{
 		int newWeekId = this.getWeekId();
 		int newDayId = this.getDayId();
 		int newMinute = this.getMinute();
-		int i = patient.getDelaysFirstTreatmentCTSim();
+		int i = patient.delaysInDaysFirstTreatmentCTSim();
 		boolean businessDay = isBusinessDays(newDayId);
 
 		if (patient.getPriority() == Priority.P2 || patient.getPriority() == Priority.P3

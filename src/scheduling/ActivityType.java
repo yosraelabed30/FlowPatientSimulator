@@ -5,11 +5,11 @@ public enum ActivityType {
 	Consultation(60),
 	Contouring(20),
 	TreatmentPlan(),
-	FirstTreatment(),
+	FirstTreatment(45),
 	FollowUp(), 
-	CTSim(),
+	CTSim(30),
 	Dosimetry(),
-	Treatment();
+	Treatment(45);
 	
 	private int defaultScheduleDuration;
 	

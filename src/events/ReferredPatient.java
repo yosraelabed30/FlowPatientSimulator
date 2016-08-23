@@ -9,8 +9,9 @@ import tools.Time;
 import umontreal.iro.lecuyer.randvar.ExponentialGen;
 import umontreal.iro.lecuyer.randvar.RandomVariateGen;
 import umontreal.iro.lecuyer.rng.MRG32k3a;
+import umontreal.iro.lecuyer.simevents.Event;
 
-public class ReferredPatient extends ActivityEvent{
+public class ReferredPatient extends Event{
 	/**
 	 * To generate the delay in between two patients arrivals
 	 */
@@ -19,15 +20,21 @@ public class ReferredPatient extends ActivityEvent{
 	 * To generate the delay in between two patients arrivals
 	 */
 	public static RandomVariateGen genReferredPatient=new ExponentialGen(new MRG32k3a(), 1.16);
+	/**
+	 * Delay separating two patients arrivals
+	 */
+	private int delay;
 	
 	public ReferredPatient(Center center) {
 		super();
 		this.center = center;
+		this.delay = 0;
 	}
 
-	public void childActions() {
+	public void actions() {
 		if(center.isWelcome()){
-			new ReferredPatient(center).schedule(delay); // Next referred patient
+			this.generateDelay();
+			new ReferredPatient(center).schedule(getDelay()); // Next referred patient
 		}
 		Patient patient = new Patient(center);
 		center.getPatients().add(patient);
@@ -55,16 +62,16 @@ public class ReferredPatient extends ActivityEvent{
 		}
 	}
 
-	@Override
-	public ActivityEvent clone() {
-		ReferredPatient clone = new ReferredPatient(center);
-		clone.setActivity(this.getActivity());
-		return clone;
+	public void generateDelay() {
+		this.setDelay((int)(genReferredPatient.nextDouble()*60));
 	}
 
-	@Override
-	public void generateDelay() {
-		this.delay=(int)(genReferredPatient.nextDouble()*60);
+	public int getDelay() {
+		return delay;
+	}
+
+	public void setDelay(int delay) {
+		this.delay = delay;
 	}
 
 }

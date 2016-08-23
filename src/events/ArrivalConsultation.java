@@ -14,7 +14,7 @@ public class ArrivalConsultation extends ActivityEvent{
 	}
 
 	@Override
-	public void childActions() {
+	public void endActions() {
 		int time = Time.now();
 		int min = Time.minIntoTheDay(time);
 		Patient patient = (Patient) this.getSchedule().getiSchedule();
@@ -39,6 +39,16 @@ public class ArrivalConsultation extends ActivityEvent{
 	@Override
 	public void generateDelay() {
 		this.delay=0;
+	}
+
+	@Override
+	public boolean conditions() {
+		return true;
+	}
+
+	@Override
+	public void startActions() {
+		
 	}
 
 }

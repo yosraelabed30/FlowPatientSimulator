@@ -20,7 +20,7 @@ public class Contouring extends ActivityEvent {
 	}
 
 	@Override
-	public void childActions() {
+	public void endActions() {
 		Doctor doctor = (Doctor) this.getiSchedule();
 		LinkedList<Patient> filesForContouring = doctor.getFilesForContouring();
 		LinkedList< Patient> filesForDosi = Dosimetrist.getFilesForDosi();
@@ -43,20 +43,27 @@ public class Contouring extends ActivityEvent {
 		clone.setActivity(this.getActivity());
 		return clone;
 	}
-
-
-	public void generateDelay(Patient patient) {
-		
-		if (patient.getPriority() == Priority.P1 || patient.getPriority() == Priority.P1) {
-			this.delay = (int) (30+ genContouringUnif.nextDouble() * 60 - 30);
-		} else {
-			this.delay = (int) (60 + genContouringUnif.nextDouble() * (180 - 60));
-		}
-	}
 	
+	@Override
 	public void generateDelay() {
+		// TODO See how to take into account what yosra has done
+//		if (patient.getPriority() == Priority.P1 || patient.getPriority() == Priority.P1) {
+//			this.delay = (int) (30+ genContouringUnif.nextDouble() * 60 - 30);
+//		} else {
+//			this.delay = (int) (60 + genContouringUnif.nextDouble() * (180 - 60));
+//		}
+		this.setDelay(0);
+	}
+
+	@Override
+	public void startActions() {
 		// TODO Auto-generated method stub
 		
+	}
+
+	@Override
+	public boolean conditions() {
+		return true;
 	}
 	
 	

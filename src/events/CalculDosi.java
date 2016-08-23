@@ -21,7 +21,7 @@ public class CalculDosi extends ActivityEvent{
 	}
 
 	@Override
-	public void childActions() {
+	public void endActions() {
 		
 		LinkedList<Patient> filesForDosi = Dosimetrist.getFilesForDosi();
 		LinkedList<Patient> filesForVerif =Dosimetrist.getFilesForVerif();
@@ -36,7 +36,7 @@ public class CalculDosi extends ActivityEvent{
 			filesForVerif.add(patient);
 			numberOfFilesTreated++;
 		}
-		new VerificationDosi(dosimetrist).schedule(0);
+		new VerificationDosi(dosimetrist).schedule(0); // something wrong here, if it's supposed to be on the dosimetrist schedule then it should be linked to an activity or else it's an event and not an activityEvent
 //		System.out.println("CalculDosi ; done by dosimetrist id : "+dosimetrist.getId()+", at min : "+min);
 	}
 
@@ -60,8 +60,18 @@ public class CalculDosi extends ActivityEvent{
 
 	@Override
 	public void generateDelay() {
+		this.setDelay(0);
+	}
+
+	@Override
+	public void startActions() {
 		// TODO Auto-generated method stub
 		
+	}
+
+	@Override
+	public boolean conditions() {
+		return true;
 	}
 
 }

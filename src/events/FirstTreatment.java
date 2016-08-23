@@ -14,18 +14,16 @@ public class FirstTreatment extends ActivityEvent{
 	}
 
 	@Override
-	public void childActions() {
+	public void endActions() {
 		TreatmentMachine machine = (TreatmentMachine) this.getiSchedule();
-		if(patient.isPresentInCenter()){
-			patient.getSteps().add(this.getActivity());
-			patient.setPresentInCenter(false);
-			patient.getSchedule().doNextTask();
-			this.getSchedule().doNextTask();
-			System.out.println("FirstTreatment ; patient id: "+patient.getId()+", prio : "+patient.getPriority()+", with treatmentmachine : "+machine.getId()+", at min : "+Time.minIntoTheDay(Time.now()));
-		}
-		else{
-//			System.out.println("FirstTreatment ; NOT HERE patient id: "+patient.getId()+", prio : "+patient.getPriority()+", with treatmentmachine : "+machine.getId()+", at min : "+Time.minIntoTheDay(Time.time()));
-		}
+		patient.getSteps().add(this.getActivity());
+		patient.setPresentInCenter(false);
+		patient.getSchedule().doNextTask();
+		this.getSchedule().doNextTask();
+//		System.out.println("FirstTreatment ; patient id: " + patient.getId()
+//				+ ", prio : " + patient.getPriority()
+//				+ ", with treatmentmachine : " + machine.getId()
+//				+ ", at min : " + Time.minIntoTheDay(Time.now()));
 	}
 
 	@Override
@@ -37,7 +35,7 @@ public class FirstTreatment extends ActivityEvent{
 
 	@Override
 	public void generateDelay() {
-		this.setDelay(20);
+		this.setDelay(45);
 	}
 
 	public Patient getPatient() {
@@ -46,6 +44,17 @@ public class FirstTreatment extends ActivityEvent{
 
 	public void setPatient(Patient patient) {
 		this.patient = patient;
+	}
+
+	@Override
+	public void startActions() {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public boolean conditions() {
+		return patient.isPresentInCenter();
 	}
 
 }

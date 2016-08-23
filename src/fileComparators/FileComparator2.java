@@ -8,8 +8,8 @@ public class FileComparator2 implements Comparator<Patient>{
 
 	@Override
 	public int compare(Patient o1, Patient o2) {
-		int d1 = o1.remainingDaysTillDeadLine();
-		int d2 = o2.remainingDaysTillDeadLine();
+		int d1 = o1.getDeadLine().toMinutes();
+		int d2 = o2.getDeadLine().toMinutes();
 		if(d1<d2){
 			return -1;
 		}

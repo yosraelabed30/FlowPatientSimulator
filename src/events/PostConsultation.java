@@ -2,6 +2,7 @@ package events;
 
 import tools.Time;
 import medical.Patient;
+import medical.Priority;
 
 public class PostConsultation extends ActivityEvent{
 	// TODO check to which technologist the patient file is assigned
@@ -13,11 +14,19 @@ public class PostConsultation extends ActivityEvent{
 	}
 
 	@Override
-	public void childActions() {
+	public void endActions() {
 		//the nurse does the education during this time
 //		System.out.println("PostConsultation ; patient id : "+patient.getId()+", doctor id : "+patient.getDoctor().getId()+", at min : "+Time.minIntoTheDay(Time.time()));
-		getPatient().getDoctor().getSchedule().doNextTask();
-		new Planification(this.getPatient()).schedule(delay);
+//		getPatient().getDoctor().getSchedule().doNextTask();
+//		new Planification(this.getPatient()).schedule(delay);
+		if (patient.getPriority()==Priority.P1 || patient.getPriority()==Priority.P2){
+			patient.getSphere().getCenter().getTechnologist().processFileForPlanification(patient);
+		}
+		else if (patient.getPriority()==Priority.P3 || patient.getPriority()==Priority.P4){
+			patient.getSphere().getCenter().getTechnologist().getFilesForCTSimTreatment().add(this.getPatient());
+		}
+		patient.setPresentInCenter(false);
+		getPatient().getSchedule().doNextTask();
 	}
 
 	@Override
@@ -38,6 +47,17 @@ public class PostConsultation extends ActivityEvent{
 
 	public void setPatient(Patient patient) {
 		this.patient = patient;
+	}
+
+	@Override
+	public void startActions() {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public boolean conditions() {
+		return true;
 	}
 
 }

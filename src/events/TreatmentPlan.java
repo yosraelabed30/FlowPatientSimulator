@@ -14,7 +14,7 @@ public class TreatmentPlan extends ActivityEvent{
 	}
 
 	@Override
-	public void childActions() {
+	public void endActions() {
 		Doctor doctor = (Doctor) this.getiSchedule();
 		LinkedList<Patient> filesForPlanTreatment = doctor.getFilesForPlanTreatment();
 	
@@ -39,6 +39,18 @@ public class TreatmentPlan extends ActivityEvent{
 	@Override
 	public void generateDelay() {
 		// TODO Auto-generated method stub
+		this.setDelay(0);
+	}
+
+	@Override
+	public void startActions() {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public boolean conditions() {
+		return true;
 	}
 
 }

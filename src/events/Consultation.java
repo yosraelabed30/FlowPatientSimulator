@@ -17,7 +17,7 @@ public class Consultation extends ActivityEvent{
 	}
 
 	@Override
-	public void childActions() {
+	public void endActions() {
 		boolean radiotherapyNeeded = patient.getDoctor().isRadiotherapyNeeded(patient); //TODO check how it works at the CHUM;
 		if(radiotherapyNeeded){
 			Doctor doctor = patient.getDoctor();
@@ -29,6 +29,7 @@ public class Consultation extends ActivityEvent{
 			//the number of treatments is fixed during the consultation 
 			int nbTreatments = doctor.decidesNbTreatments(patient);
 			patient.setNbTreatments(nbTreatments);
+			getPatient().getDoctor().getSchedule().doNextTask();
 			new PostConsultation(this.getPatient()).schedule(delay);
 		}
 		else{
@@ -47,7 +48,6 @@ public class Consultation extends ActivityEvent{
 
 	@Override
 	public void generateDelay() {
-		//TODO implements something that represents reality
 		this.delay = 30;
 	}
 
@@ -57,6 +57,16 @@ public class Consultation extends ActivityEvent{
 
 	public void setPatient(Patient patient) {
 		this.patient = patient;
+	}
+
+	@Override
+	public void startActions() {
+		
+	}
+
+	@Override
+	public boolean conditions() {
+		return true;
 	}
 	
 }

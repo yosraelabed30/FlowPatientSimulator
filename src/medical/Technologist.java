@@ -85,15 +85,20 @@ public class Technologist implements ISchedule{
 	return (this.getSchedule().addWeek(weekId));
 	}
 
-	
+	/**
+	 * 
+	 * @param patient
+	 * @return 
+	 * @author Yosra Elabed
+	 */
 	public Activity DelayTreatment(Patient patient) {
 		Activity treatment=null;
 		Availability best = null;
 		Availability tmp = null;
-		int duration = 45;
+		int duration = ActivityType.Treatment.getDefaultScheduleDuration();
 		ArrayList<TreatmentMachine> adequateMachine = new ArrayList<>();
 		
-		Date dateLowerBound = Date.toDates(patient.getArrivalMinutes());
+		Date dateLowerBound = patient.getReferredDate();
 		Date dateUpperBound = dateLowerBound.clone();
 		dateUpperBound.setMinute(24*60-1);
 		ArrayList<BlockType> blockTypes = new ArrayList<>();
@@ -130,7 +135,7 @@ public class Technologist implements ISchedule{
 	}
 		
 	public Activity NoShowsTreatment(Patient patient){
-		int duration = 45;
+		int duration = ActivityType.Treatment.getDefaultScheduleDuration();
 		boolean scheduled = false;
 		Activity best = patient.getPlannedStepsTreatments().getLast();
 		Date date = best.getDate().increase();
@@ -348,7 +353,7 @@ public class Technologist implements ISchedule{
 			Date dateFirstTreatment, boolean relaxingConstraintFirstTreatmentCTSim) {
 		dateFirstTreatment.decreaseMinute();
 		Date now  = Date.now();
-		int duration = 30;
+		int duration = ActivityType.CTSim.getDefaultScheduleDuration();
 		int nbCTSims = patient.getScanTechnics().size();
 		ArrayList<Activity> CTSims = Technologist.nullList(nbCTSims);
 		LinkedList<Integer> list = new LinkedList<>();
@@ -441,7 +446,7 @@ public class Technologist implements ISchedule{
 
 	private Activity searchFirstTreatment(Patient patient, Date dateLowerBound) {
 		Activity firstTreatmentForMachine = null;
-		int duration = 30;
+		int duration = ActivityType.FirstTreatment.getDefaultScheduleDuration();
 		Availability best = null;
 		Availability tmp = null;
 		ArrayList<TreatmentMachine> appropriateMachines = new ArrayList<>();

@@ -16,18 +16,18 @@ public class CTSim extends ActivityEvent{
 	}
 	
 	@Override
-	public void childActions() {
-		if(patient.isPresentInCenter()){
-			System.out.println("CTSim : patient : "+patient.getId()+", priority : "+patient.getPriority()+", at minute : "+Time.minIntoTheDay(Time.now()));
-			patient.getSteps().add(this.getActivity());
-			if(last){
-				Technologist.getFilesForPreContouring().add(patient);
-//				System.out.println("file has been transfered to the technologists");
-			}
-			patient.setPresentInCenter(false);
-			patient.getSchedule().doNextTask();
-			this.getSchedule().doNextTask();
+	public void endActions() {
+//		System.out.println("CTSim : patient : " + patient.getId()
+//				+ ", priority : " + patient.getPriority() + ", at minute : "
+//				+ Time.minIntoTheDay(Time.now()));
+		patient.getSteps().add(this.getActivity());
+		if (last) {
+			Technologist.getFilesForPreContouring().add(patient);
+			// System.out.println("file has been transfered to the technologists");
 		}
+		patient.setPresentInCenter(false);
+		patient.getSchedule().doNextTask();
+		this.getSchedule().doNextTask();
 	}
 
 	@Override
@@ -39,9 +39,6 @@ public class CTSim extends ActivityEvent{
 
 	@Override
 	public void generateDelay() {
-		if(patient.isMoldNeeded()){
-			//TODO something? maybe the duration of the CTSim vary
-		}
 		this.setDelay(30);
 	}
 
@@ -51,6 +48,17 @@ public class CTSim extends ActivityEvent{
 
 	public void setLast(boolean last) {
 		this.last = last;
+	}
+
+	@Override
+	public void startActions() {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public boolean conditions() {
+		return patient.isPresentInCenter();
 	}
 
 }

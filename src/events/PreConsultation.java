@@ -16,22 +16,15 @@ public class PreConsultation extends ActivityEvent{
 	}
 
 	@Override
-	public void childActions() {
+	public void endActions() {
 		/*
 		 * Display some data in console to check
 		 */
 		int time = Time.now();
 		int min = Time.minIntoTheDay(time);
 //		System.out.println("PreConsultation : checking if patient id : "+getPatient().getId()+" with priority "+getPatient().getPriority()+" is present : "+getPatient().isPresentInCenter()+", at min : "+min+", with doctor id : "+getPatient().getDoctor().getId());
-		if(getPatient().isPresentInCenter()){
-			//schedule the pre-consultation event
-			getPatient().getSteps().add(this.getActivity());
-			new Consultation(this.patient).schedule(0);
-		}
-		else{
-			getActivity().setStatus(ActivityStatus.ToPostpone);
-			getPatient().getDoctor().getSchedule().doNextTask();
-		}
+		getPatient().getSteps().add(this.getActivity());
+		new Consultation(this.patient).schedule(0);
 	}
 
 	public AdminAgent getAdminAgent() {
@@ -60,6 +53,22 @@ public class PreConsultation extends ActivityEvent{
 
 	public void setPatient(Patient patient) {
 		this.patient = patient;
+	}
+
+	@Override
+	public void startActions() {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public boolean conditions() {
+		boolean present = getPatient().isPresentInCenter();
+		if(!present){
+			getActivity().setStatus(ActivityStatus.ToPostpone);
+			getPatient().getDoctor().getSchedule().doNextTask();
+		}
+		return present;
 	}
 	
 }
