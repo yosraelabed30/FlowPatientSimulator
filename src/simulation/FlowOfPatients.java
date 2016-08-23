@@ -75,7 +75,7 @@ public class FlowOfPatients {
 //		test.simulateOneRun(525600*2);
 //		test.simulateOneRun(525600);
 //		test.simulateOneRun(288000);
-//		test.simulateOneRun(100000);
+		test.simulateOneRun(100000);
 //		test.simulateOneRun(30000);
 //		test.simulateOneRun(72*60);
 		
