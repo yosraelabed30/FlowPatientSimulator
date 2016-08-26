@@ -1,5 +1,14 @@
 package medical;
 
+import umontreal.iro.lecuyer.randvar.RandomVariateGen;
+import umontreal.iro.lecuyer.randvar.UniformGen;
+import umontreal.iro.lecuyer.rng.MRG32k3a;
+
+/**
+ * Treatment technics of the cancer
+ * @author Joffrey
+ *
+ */
 public enum TreatmentTechnic {
 	TXUroRA(0),
 	TXColonneCK(1),
@@ -99,7 +108,7 @@ public enum TreatmentTechnic {
 	TXTrijCK(95),
 	TXUro3D(96),
 	TXUroIMRT(97);
-	
+	public static RandomVariateGen genTreatTechUnif =new UniformGen(new MRG32k3a(),0,1);
 	private int index ;
 	private TreatmentTechnic( int index) {
 		this.index=index;
@@ -124,7 +133,7 @@ public enum TreatmentTechnic {
 	
 	public static TreatmentTechnic generateTreatmentTechnic(){
 		int length = TreatmentTechnic.values().length;
-		int index = (int) (Math.random()*length);
+		int index = (int) (genTreatTechUnif.nextDouble()*length);
 		TreatmentTechnic treatmentTechnic =getTreatmentTechnic(index);
 		return treatmentTechnic;
 		

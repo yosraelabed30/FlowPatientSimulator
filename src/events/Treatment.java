@@ -18,35 +18,36 @@ public class Treatment extends ActivityEvent{
 	}
 
 	@Override
-	public void childActions() {
+	public void endActions() {
 		TreatmentMachine machine = (TreatmentMachine) this.getiSchedule();
 		String msg = "";
-		if(patient.isPresent()){
-			patient.getSteps().add(this.getActivity());
-			patient.setPresent(false);
-			patient.getSchedule().doNextTask();
-			this.getSchedule().doNextTask();
-			if(last){
-				patient.setOut(true);
-				msg+="Last ";
-				
-				//TODO remove that, only for show
-				if (FlowOfPatients.test1 == null
-						&& (patient.getPriority() == Priority.P1 || patient.getPriority() == Priority.P2)) {
-					FlowOfPatients.test1 = patient;
-				}
-				if (FlowOfPatients.test2 == null
-						&& (patient.getPriority() == Priority.P3 || patient.getPriority() == Priority.P4)) {
-					FlowOfPatients.test2=patient;
-				}
-				
+
+		patient.getSteps().add(this.getActivity());
+		patient.setPresentInCenter(false);
+		patient.getSchedule().doNextTask();
+		this.getSchedule().doNextTask();
+		if (last) {
+			patient.toPatientsOut();
+			msg += "Last ";
+
+			// TODO remove that, only for show
+			if (FlowOfPatients.test1 == null
+					&& (patient.getPriority() == Priority.P1 || patient
+							.getPriority() == Priority.P2)) {
+				FlowOfPatients.test1 = patient;
 			}
-			msg += "Treatment ; patient id: "+patient.getId()+", prio : "+patient.getPriority()+", with treatmentmachine : "+machine.getId()+", at min : "+Time.minIntoTheDay(Time.time());
+			if (FlowOfPatients.test2 == null
+					&& (patient.getPriority() == Priority.P3 || patient
+							.getPriority() == Priority.P4)) {
+				FlowOfPatients.test2 = patient;
+			}
+
 		}
-		else{
-			msg += "Treatment ; NOT HERE patient id: "+patient.getId()+", prio : "+patient.getPriority()+", with treatmentmachine : "+machine.getId()+", at min : "+Time.minIntoTheDay(Time.time());
-		}
-		System.out.println(msg);
+		msg += "Treatment ; patient id: " + patient.getId() + ", prio : "
+				+ patient.getPriority() + ", with treatmentmachine : "
+				+ machine.getId() + ", at min : "
+				+ Time.minIntoTheDay(Time.now());
+		//		System.out.println(msg);
 	}
 
 	@Override
@@ -58,7 +59,7 @@ public class Treatment extends ActivityEvent{
 
 	@Override
 	public void generateDelay() {
-		this.setDelay(20);
+		this.setDelay(45);
 	}
 
 	public Patient getPatient() {
@@ -75,6 +76,17 @@ public class Treatment extends ActivityEvent{
 
 	public void setLast(boolean last) {
 		this.last = last;
+	}
+
+	@Override
+	public void startActions() {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public boolean conditions() {
+		return patient.isPresentInCenter();
 	}
 
 }

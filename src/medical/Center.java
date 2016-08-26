@@ -5,64 +5,79 @@ import java.util.Iterator;
 import java.util.LinkedList;
 
 import tools.Time;
+import umontreal.iro.lecuyer.simevents.LinkedListStat;
 import umontreal.iro.lecuyer.simevents.Sim;
-
+/**
+ * Radiotherapy center
+ * @author Joffrey
+ *
+ */
 public class Center {
 	private int centerId;
 	/**
 	 * Is true when the center is opened and can welcome patients, is false otherwise.
 	 */
 	boolean welcome;
-	ArrayList<ChefSphere> chefSpheres;
+	/**
+	 * Time in minutes when the center opens everyday
+	 */
+	private int openingTime = 7*60+30;
+	/**
+	 * Time in minutes when the center closes everyday
+	 */
+	private int closingTime = 30+21 * 60;
+	/**
+	 * Doctors in the center, can be also accessed via there respective spheres.
+	 */
 	ArrayList<Doctor> doctors;
-	LinkedList<Patient> patients;
+	/**
+	 * Patients assigned to this center
+	 */
+	LinkedListStat<Patient> patients;
+	/**
+	 * Patients assigned to this center that are done with the radiotherapy process
+	 */
 	LinkedList<Patient> patientsOut;
+	/**
+	 * Scan machines of the center
+	 */
 	ArrayList<Scan> scans;
+	/**
+	 * Treatment machines of the center
+	 */
 	ArrayList<TreatmentMachine> treatmentMachines;
-	
+	/**
+	 * Dosimetrists working in the center
+	 */
 	private ArrayList<Dosimetrist> dosimetrists;
+	/**
+	 * Model the tasks made by all the administrative agents working in the center
+	 */
 	private AdminAgent adminAgent;
+	/**
+	 * Model the tasks made by all the technologists working in the center
+	 * TODO change to a list of multiple technologists
+	 */
 	private Technologist technologist;
+	/**
+	 * Spheres of the center, one for each cancer type
+	 */
 	private ArrayList <Sphere> spheres;
 	
 	public Center(){
 		super();
 		this.welcome = false;
 		this.doctors = new ArrayList<>();
-		this.patients = new LinkedList<>();
+		this.patients = new LinkedListStat<>();
 		this.patientsOut = new LinkedList<>();
 		this.scans = new ArrayList<>();
-		this.chefSpheres = new ArrayList<>();
 		this.treatmentMachines = new ArrayList<>();
 		this.spheres = new ArrayList<>();
 		this.dosimetrists = new ArrayList<>();
+		patients.setStatCollecting(true);
+		patients.statSize().setName("Size of queue of patients in the center");
+		patients.statSojourn().setName("Radiotherapy waiting time");
 	}
-
-	
-	
-	public Center(int centerId, boolean welcome,
-			ArrayList<ChefSphere> chefSpheres, ArrayList<Doctor> doctors,
-			LinkedList<Patient> patients, LinkedList<Patient> patientsOut,
-			ArrayList<Scan> scans,
-			ArrayList<TreatmentMachine> treatmentMachines,
-			ArrayList<Dosimetrist> dosimetrists, AdminAgent adminAgent,
-			Technologist technologist, ArrayList <Sphere> spheres) {
-		super();
-		this.centerId = centerId;
-		this.welcome = welcome;
-		this.chefSpheres = chefSpheres;
-		this.doctors = doctors;
-		this.patients = patients;
-		this.patientsOut = patientsOut;
-		this.scans = scans;
-		this.treatmentMachines = treatmentMachines;
-		this.setDosimetrists(dosimetrists);
-		this.adminAgent = adminAgent;
-		this.technologist = technologist;
-		this.spheres=spheres;
-	}
-
-
 
 	/*
 	 * Getters and setters
@@ -76,11 +91,11 @@ public class Center {
 		this.doctors = doctors;
 	}
 
-	public LinkedList<Patient> getPatients() {
+	public LinkedListStat<Patient> getPatients() {
 		return patients;
 	}
 
-	public void setPatients(LinkedList<Patient> patients) {
+	public void setPatients(LinkedListStat<Patient> patients) {
 		this.patients = patients;
 	}
 
@@ -99,14 +114,6 @@ public class Center {
 	public void setCtscans(ArrayList<Scan> ctscans) {
 		this.scans = ctscans;
 	}
-
-	public ArrayList<ChefSphere> getChefSpheres() {
-		return chefSpheres;
-	}
-
-	public void setChefSpheres(ArrayList<ChefSphere> chefSpheres) {
-		this.chefSpheres = chefSpheres;
-	}
 	
 	public AdminAgent getAdminAgent() {
 		return adminAgent;
@@ -116,11 +123,12 @@ public class Center {
 		this.adminAgent = adminAgent;
 	}
 
+	/**
+	 * Make all the people in the center with a schedule (ie implementing ISchedule) do their next task in their agenda
+	 */
 	public void doScheduleToday() {
 		for (Patient patient : patients) {
-			if(!patient.isOut()){
-				patient.getSchedule().doNextTask();
-			}
+			patient.getSchedule().doNextTask();
 		}
 		for(Doctor doctor : doctors){
 			doctor.getSchedule().doNextTask();
@@ -137,7 +145,7 @@ public class Center {
 	}
 	
 	/**
-	 * adds the beginning week to every participant
+	 * adds the new coming week to all the people in the center with a schedule (ie implementing ISchedule)
 	 */
 	public void addWeek(){
 		int time = (int) Sim.time();
@@ -184,15 +192,16 @@ public class Center {
 		this.patientsOut = patientsOut;
 	}
 	
-	public void fromPatientsToPatientsOut(){
-		Iterator<Patient> patientsIter = patients.iterator();
-		while(patientsIter.hasNext()){
-			Patient p = patientsIter.next();
-			if(p.isOut()){
-				patientsIter.remove();
-				patientsOut.add(p);
-			}
-		}
+	/**
+	 * Remove from patients and add to patients out
+	 */
+	public void toPatientsOut(Patient patient){
+		patient.setOut(true);
+		patients.remove(patient);
+		patientsOut.add(patient);
+		patients.statSize().update();
+		int obs = Time.now() - patient.getReferredDate().toMinutes();
+		patients.statSojourn().add(obs);
 	}
 
 	public ArrayList<TreatmentMachine> getTreatmentMachines() {
@@ -237,5 +246,27 @@ public class Center {
 		this.dosimetrists = dosimetrists;
 	}
 
-	
+	public int getOpeningTime() {
+		return openingTime;
+	}
+
+	public void setOpeningTime(int openingTime) {
+		this.openingTime = openingTime;
+	}
+
+	public int getClosingTime() {
+		return closingTime;
+	}
+
+	public void setClosingTime(int closingTime) {
+		this.closingTime = closingTime;
+	}
+
+	public ArrayList<ChefSphere> getChefsSphere(){
+		ArrayList<ChefSphere> chefs = new ArrayList<>();
+		for (Sphere sphere : this.getSpheres()) {
+			chefs.add(sphere.getChefSphere());
+		}
+		return chefs;
+	}
 }

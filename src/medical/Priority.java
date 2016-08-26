@@ -1,5 +1,9 @@
 package medical;
 
+import umontreal.iro.lecuyer.randvar.RandomVariateGen;
+import umontreal.iro.lecuyer.randvar.UniformGen;
+import umontreal.iro.lecuyer.rng.MRG32k3a;
+
 public enum Priority {
 	P1(1,1),
 	P2(2,3),
@@ -8,7 +12,7 @@ public enum Priority {
 	
 	private int order;
 	private int delay;
-	
+	public static RandomVariateGen genPriorityUnif =new UniformGen(new MRG32k3a(),0,1);
 	Priority(int order, int delay){
 		this.setOrder(order);
 		this.setDelay(delay);
@@ -40,12 +44,11 @@ public enum Priority {
 	}
 	
 	public static Priority generatePriority(){
-		
 		int order ;
 		int delay ;
-		double i = Math.random();
-		double j = Math.random();
-		double z = Math.random();
+		double i = genPriorityUnif.nextDouble();
+		double j = genPriorityUnif.nextDouble();
+		double z = genPriorityUnif.nextDouble();
 		
 		if (i<= 0.8) {
 			order = 3;
@@ -54,7 +57,6 @@ public enum Priority {
 		else if(j<=0.7) {
 			order =2;
 			delay = 3;
-			
 		}
 		else if (z<=0.8){
 			order =4;
@@ -65,9 +67,7 @@ public enum Priority {
 			delay = 1;
 		}
 		Priority priority = getPriority(order, delay);
-
 		return priority;
-		
 	}
 	
 }

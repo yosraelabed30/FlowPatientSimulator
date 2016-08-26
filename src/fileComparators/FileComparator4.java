@@ -16,8 +16,8 @@ public 	class FileComparator4 implements Comparator<Patient>{
 
 	@Override
 	public int compare(Patient o1, Patient o2) {
-		int v1 = alpha*o1.getPriority().getOrder()+beta*o1.remainingDaysTillDeadLine();
-		int v2 = alpha*o2.getPriority().getOrder()+beta*o2.remainingDaysTillDeadLine();
+		int v1 = alpha*o1.getPriority().getOrder()+beta*o1.getDeadLine().toMinutes();
+		int v2 = alpha*o2.getPriority().getOrder()+beta*o2.getDeadLine().toMinutes();
 		if(v1<v2){
 			return -1;
 		}

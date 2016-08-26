@@ -2,6 +2,7 @@ package scheduling;
 
 import java.util.LinkedList;
 
+import tools.Time;
 import medical.Center;
 
 public class Block implements Comparable<Block>{
@@ -14,11 +15,11 @@ public class Block implements Comparable<Block>{
 	 */
 	private int blockId;
 	/**
-	 * start, in minutes between 0 and 24*60
+	 * start, in minutes between 0 and 24*60-1 included
 	 */
 	private int start;
 	/**
-	 * end, in minutes between 0 and 24*60
+	 * end, in minutes between 0 and 24*60-1 included
 	 */
 	private int end;
 	/**
@@ -119,23 +120,6 @@ public class Block implements Comparable<Block>{
 		}
 		return clone;
 	}
-	
-	public Activity elongation (int duration){
-		Activity free = null;
-		Activity activity= this.getActivities().getLast();
-		if (activity!= null && activity.getType()== ActivityType.Free){
-			activity.setEnd(this.getEnd()+duration);
-			free = activity;
-		}
-		else if (activity!= null && activity.getType() != ActivityType.Free){
-			free =new Activity (this, activity.getEnd(),activity.getEnd()+duration);
-			this.getActivities().addLast(free);
-		}
-		this.setEnd(this.getEnd()+duration);
-		return free;
-	
-	}
-	
 
 	public int getBlockId() {
 		return blockId;
@@ -197,5 +181,9 @@ public class Block implements Comparable<Block>{
 			res = 1;
 		}
 		return res;
+	}
+	
+	public int duration(){
+		return Time.duration(this.getStart(), this.getEnd());
 	}
 }

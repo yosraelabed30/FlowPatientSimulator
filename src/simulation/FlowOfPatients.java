@@ -22,6 +22,7 @@ import events.ActivityEvent;
 import events.ArrivalTreatment;
 import events.CalculDosi;
 import events.Contouring;
+import events.Opening;
 import events.PreConsultation;
 import events.ReferredPatient;
 import events.Treatment;
@@ -36,6 +37,7 @@ import umontreal.iro.lecuyer.randvar.ExponentialGen;
 import umontreal.iro.lecuyer.randvar.RandomVariateGen;
 import umontreal.iro.lecuyer.rng.MRG32k3a;
 import umontreal.iro.lecuyer.simevents.Event;
+import umontreal.iro.lecuyer.simevents.LinkedListStat;
 import umontreal.iro.lecuyer.simevents.Sim;
 
 /**
@@ -44,41 +46,20 @@ import umontreal.iro.lecuyer.simevents.Sim;
  */
 public class FlowOfPatients {
 	/**
-	 * To generate the delay in between two patients arrivals
-	 */
-	RandomVariateGen genReferredPatient;
-	/**
-	 * day counter
-	 */
-	static int day=-1;
-	/**
-	 * Day of the week, from 0 (Monday) to 6 (Sunday)
-	 */
-	static int dayOfWeek;
-	/**
-	 * Week number
-	 */
-	static int week=-1;
-	/**
-	 * Just to check the number of patients per day (TODO remove it, when no longer needed)
-	 */
-	int patientsPerDay;
-	/**
 	 * Medical {@link Center}
 	 */
 	public Center center;
-	
+	/**
+	 * example of patient displayed at the end of the simulation in the console
+	 */
 	public static Patient test1=null;
+	/**
+	 * example of patient displayed at the end of the simulation in the console
+	 */
 	public static Patient test2=null;
 	
-	/**
-	 * Constructor initiating the day of the week to -1, since it is immediately increased
-	 * {@link #genReferredPatient} is instanciated with an ExponentialGen, see Taobane memoire for more info
-	 */
 	public FlowOfPatients() {
 		super();
-		dayOfWeek = -1;
-		this.genReferredPatient = new ExponentialGen(new MRG32k3a(), 1.16);
 		this.center = new Center();
 	}
 
@@ -88,18 +69,18 @@ public class FlowOfPatients {
 	 * @param args
 	 */
 	public static void main(String[] args) {
+		Cancer.cancersFileReader();
 		double time = System.currentTimeMillis();
 		FlowOfPatients test = new FlowOfPatients();
 		test.setCenter(test.CHUM());
-//		test.simulateOneRun(525600*2);
+		test.simulateOneRun(525600*2);
 //		test.simulateOneRun(525600);
 //		test.simulateOneRun(288000);
-		test.simulateOneRun(100000);
+//		test.simulateOneRun(100000);
 //		test.simulateOneRun(30000);
 //		test.simulateOneRun(72*60);
 		
 		time = System.currentTimeMillis()-time;
-		System.out.println("time : "+time);
 		
 		int nbPatientTreated = test.getCenter().getPatientsOut().size();
 		int nbPatientNotYetTreated = test.getCenter().getPatients().size();
@@ -110,6 +91,10 @@ public class FlowOfPatients {
 		if(test2!=null){
 			System.out.println("\n"+test2);
 		}
+		System.out.println("\n"+test.getCenter().getPatients().statSize().report());
+		System.out.println(test.getCenter().getPatients().statSojourn().report());
+		System.out.println("Statistics, nb of patients for planif : "+Statistics.getNbPatientsForPlanif()+", planned on time : "+Statistics.getPlannedOnTime()+", and late : "+Statistics.getPlannedLate());
+		System.out.println("running time : "+time);
 	}
 
 	/**
@@ -119,7 +104,7 @@ public class FlowOfPatients {
 	public void simulateOneRun(double timeHorizon) {
 		Sim.init();
 		new EndOfSim().schedule(timeHorizon);
-		new DayStart().schedule(7*60+30);
+		new Opening(this.getCenter()).schedule(this.getCenter().getOpeningTime());
 		Sim.start();
 	}
 	
@@ -131,39 +116,42 @@ public class FlowOfPatients {
 		this.center = center;
 	}
 
+	/**
+	 * 
+	 * @return an instance of Center modeling the Centre Hospitalier de l'Université de Montréal or CHUM for short.
+	 */
 	public Center CHUM(){
 		Center chum = new Center();
-		for (Cancer cancer : Cancer.values()) {
+		for (Cancer cancer : Cancer.getCancers()) {
 			Sphere sphere = new Sphere(chum,cancer, null, new ArrayList<Doctor>(), new ArrayList<Patient>());
 			chum.getSpheres().add(sphere);
 			
 			ArrayList<ArrayList<Block>>blocksTab = new ArrayList<ArrayList<Block>>(7);
 			for(int i=0;i<7;i++){
 				ArrayList<Block> blocks = new ArrayList<>();
-				blocks.add(new Block(0, 0, 8*60, BlockType.NotWorking));
-				blocks.add(new Block(1, 8*60, 17*60, BlockType.Consultation));
-				Block contouringBlock = new Block(2, 17*60, 19*60, BlockType.Contouring);
+				blocks.add(new Block(0, 7*60, 8*60-1, BlockType.OverTime));
+				blocks.add(new Block(1, 8*60, 17*60-1, BlockType.Consultation));
+				Block contouringBlock = new Block(2, 17*60, 19*60-1, BlockType.Contouring);
 				Activity contouringActivity = contouringBlock.getActivities().get(0);
 				contouringActivity.setType(ActivityType.Contouring);
 				contouringActivity.setActivityEvent(new Contouring());
 				blocks.add(contouringBlock);
-				Block treatmentPlanBlock = new Block(3, 19*60, 20*60, BlockType.TreatmentPlan);
+				Block treatmentPlanBlock = new Block(3, 19*60, 20*60-1, BlockType.TreatmentPlan);
 				Activity treatmentPlanActivity = treatmentPlanBlock.getActivities().get(0);
 				treatmentPlanActivity.setType(ActivityType.TreatmentPlan);
 				treatmentPlanActivity.setActivityEvent(new TreatmentPlan());
 				blocks.add(treatmentPlanBlock);
-				blocks.add(new Block(4, 20*60, 24*60, BlockType.NotWorking));
+				blocks.add(new Block(4, 20*60, 24*60-1, BlockType.OverTime));
 				blocksTab.add(blocks);
 			}
 			ArrayList<Sphere> sphereDoctor = new ArrayList<>();
 			sphereDoctor.add(sphere);
-			Doctor doc = new Doctor(blocksTab, sphereDoctor, chum);
+			Doctor doc = new Doctor(blocksTab, sphereDoctor);
 			sphere.getDoctors().add(doc);
 			chum.getDoctors().add(doc);
 			
 			ChefSphere chef = new ChefSphere(sphere);
 			sphere.setChefSphere(chef);
-			chum.getChefSpheres().add(chef);
 		}
 		
 		int nbTreatmentMachines=30;
@@ -171,8 +159,8 @@ public class FlowOfPatients {
 			ArrayList<ArrayList<Block>>blocksTab = new ArrayList<ArrayList<Block>>(7);
 			for(int j=0;j<7;j++){
 				ArrayList<Block> blocks = new ArrayList<>();
-				blocks.add(new Block(0, 7*60, 16*60, BlockType.Treatment));
-				blocks.add(new Block(1, 16*60, 18*60, BlockType.Reserved));
+				blocks.add(new Block(0, 7*60, 16*60-1, BlockType.Treatment));
+				blocks.add(new Block(1, 16*60, 18*60-1, BlockType.Reserved));
 				blocksTab.add(blocks);
 			}
 			ArrayList <TreatmentTechnic> treatmentTechnics = new ArrayList<>();
@@ -186,8 +174,8 @@ public class FlowOfPatients {
 				ArrayList<ArrayList<Block>>blocksTab = new ArrayList<ArrayList<Block>>(7);
 				for(int i=0;i<7;i++){
 					ArrayList<Block> blocks = new ArrayList<>();
-					blocks.add(new Block(0, 8*60, 15*60, BlockType.Scan));
-					blocks.add(new Block(1, 15*60, 17*60, BlockType.Reserved));
+					blocks.add(new Block(0, 8*60, 15*60-1, BlockType.Scan));
+					blocks.add(new Block(1, 15*60, 17*60-1, BlockType.Reserved));
 					blocksTab.add(blocks);
 				}
 				chum.getCtscans().add(new Scan(chum, true, scanTechnic, blocksTab));
@@ -199,7 +187,7 @@ public class FlowOfPatients {
 			ArrayList<ArrayList<Block>>blocksTab = new ArrayList<ArrayList<Block>>(7);
 			for(int j=0;j<7;j++){
 				ArrayList<Block> blocks = new ArrayList<>();
-				Block dosiBlock = new Block(0, 8*60, 17*60, BlockType.Dosimetry);
+				Block dosiBlock = new Block(0, 8*60, 17*60-1, BlockType.Dosimetry);
 				Activity dosiActivity = dosiBlock.getActivities().get(0);
 				dosiActivity.setType(ActivityType.Dosimetry);
 				dosiActivity.setActivityEvent(new CalculDosi());
@@ -214,175 +202,12 @@ public class FlowOfPatients {
 		chum.setTechnologist(new Technologist(chum));
 		return chum;
 	}
-
 	
-	class DayStart extends Event {
-
-		public void actions() {
-			this.increaseDay();
-			this.increaseDayOfWeek();
-			
-			if(dayOfWeek==0){
-				this.increaseWeek();
-				getCenter().addWeek();
-			}
-			
-			if(dayOfWeek==5 || dayOfWeek==6){
-				getCenter().setWelcome(false);
-			}
-			else{
-				getCenter().setWelcome(true);
-			}
-			patientsPerDay = 0;
-			int time = (int)Sim.time();
-			Date date = Date.dateNow();
-			
-			System.out.println("\nDayStart");
-			System.out.println("New day in minutes : "+time+" it's a "+dayOfWeek+", of week "+week+" and it is day "+day);
-			
-			getCenter().getTechnologist().processPatientFilesForPreContouring();
-			
-			new DayEnd().schedule(10*60);
-			new ReferredPatient(genReferredPatient, getCenter()).schedule ((int)(genReferredPatient.nextDouble()*60));
-			getCenter().doScheduleToday();
-			ArrayList <ChefSphere> chefSpheres= getCenter().getChefSpheres();
-			
-			if (date.getWeekId()!=0 || date.getDayId()!=0){
-				for (ChefSphere chefSphere : chefSpheres) {
-					chefSphere.NoShowConsultation(date);
-//					System.out.println("le moment de replanification" +Date.dateNow() );
-				}
-			}
-		}
-
-		private void increaseWeek() {
-			week++;
-		}
-
-		private void increaseDay() {
-			day++;
-		}
-
-		private void increaseDayOfWeek() {
-			if(dayOfWeek==6){
-				dayOfWeek=0;
-			}
-			else{
-				dayOfWeek++;
-			}
-		}
-		
-	}
-	
-	class DayEnd extends Event {
-
-		public void actions() {
-			getCenter().setWelcome(false);
-			new DayStart().schedule(14 * 60);
-
-			getCenter().getAdminAgent().processDemands();
-			for (ChefSphere chef : getCenter().getChefSpheres()) {
-				chef.processDemands();
-			}
-			center.getTechnologist().processPatientFilesForPlanification();
-
-			getCenter().fromPatientsToPatientsOut();
-			
-//			isReadyForTheTreatment(2);
-//			isReadyForTheTreatment(1);
-
-		}
-
-		public void isReadyForTheTreatment(int counter) {
-
-			LinkedList<Patient> patients = getCenter().getPatients();
-			for (Patient patient : patients) {
-				if((patient.getPriority()==Priority.P3 || patient.getPriority()==Priority.P4) && patient.getPlannedStepsTreatments().size()>0){
-					int duration = 45;
-					Date now = Date.dateNow();
-					Date daysBeforeTheFirstTreatment = now.increase(counter);
-					Date firstTreatment = patient.getPlannedStepsTreatments().getFirst().getDate();
-					if (firstTreatment.getWeekId() == daysBeforeTheFirstTreatment.getWeekId()
-							&& firstTreatment.getDayId() == daysBeforeTheFirstTreatment.getDayId()) {
-						Doctor doctor = patient.getDoctor();
-						ArrivalTreatment arrivalTreatment = (ArrivalTreatment) patient.getPlannedStepsTreatments().getFirst().getActivityEvent();
-						TreatmentMachine treatmentMachine = (TreatmentMachine) arrivalTreatment.getTreatmentMachine();
-						if (doctor.getFilesForContouring().contains(patient)) {
-
-							patient.getPlannedStepsTreatments().poll();
-							treatmentMachine.getSchedule().getActivityAssociated(firstTreatment).delete();
-							patient.getSchedule().getActivityAssociated(firstTreatment).delete();
-							Date lastTreatment = patient.getPlannedStepsTreatments().getLast().getDate();
-							Date newLastTreatment = lastTreatment.increase();
-							Activity best = treatmentMachine.getSchedule()
-									.findFreeActivityToInsertOtherActivity(newLastTreatment, duration);
-
-							patient.setFirstTreatment(patient.getPlannedStepsTreatments().getFirst());
-
-							if (best != null) {
-								int start = best.getStart();
-								int end = start + duration;
-
-								Treatment treatment = new Treatment(patient);
-								Activity treatmentActivity = new Activity(best.getBlock(), start, end,
-										ActivityType.Treatment, treatment);
-								best.insert(treatmentActivity);
-
-								Activity treatmentActivityPatient = treatmentActivity.clone();
-								Activity free = patient.getSchedule().findFreeActivityToInsertOtherActivity(
-										best.getDate().getWeekId(), best.getDate().getDayId(), start, end);
-								free.insert(treatmentActivityPatient);
-								patient.getPlannedStepsTreatments().add(best);
-
-							}
-
-							else {
-								TreatmentTechnic treatmentTechnic = patient.getTreatmentTechnic();
-								ArrayList<TreatmentMachine> treatmentMachines = getCenter().getTreatmentMachines();
-								ArrayList<TreatmentMachine> adequateMachines = null;
-								for (TreatmentMachine treatmentMachine2 : treatmentMachines) {
-									if (treatmentMachine2.getTreatmentTechnics().contains(treatmentTechnic)) {
-										adequateMachines.add(treatmentMachine2);
-									}
-								}
-								for (TreatmentMachine adequateMachine : adequateMachines) {
-									Activity tmp = adequateMachine.getSchedule()
-											.findFreeActivityToInsertOtherActivity(newLastTreatment, duration);
-									if (best == null || tmp.startsEarlierThan(best)) {
-										best = tmp;
-									}
-								}
-								if (best == null) {
-									best = treatmentMachine.getSchedule().getFirstAvailabilityNotWeekend(duration,
-											BlockType.Treatment, patient.getPlannedStepsTreatments().getFirst().getDate().getWeekId(),
-											patient.getPlannedStepsTreatments().getFirst().getDate().getDayId(),
-											patient.getPlannedStepsTreatments().getFirst().getDate().getMinute(),
-											patient.getPlannedStepsTreatments().getFirst().getDate().getWeekId(),
-											patient.getPlannedStepsTreatments().getFirst().getDate().getDayId(), 18 * 60);
-								}
-								if (best != null) {
-									int start = best.getStart();
-									int end = start + duration;
-
-									Treatment treatment = new Treatment(patient);
-									Activity treatmentActivity = new Activity(best.getBlock(), start, end,
-											ActivityType.Treatment, treatment);
-									best.insert(treatmentActivity);
-
-									Activity treatmentActivityPatient = treatmentActivity.clone();
-									Activity free = patient.getSchedule().findFreeActivityToInsertOtherActivity(
-											best.getDate().getWeekId(), best.getDate().getDayId(), start, end);
-									free.insert(treatmentActivityPatient);
-									patient.getPlannedStepsTreatments().add(best);
-								}
-							}
-						}
-					}
-				}
-			}	
-		}
-	}
-
+	/**
+	 * Common event class for a simulation corresponding to the end of the simulation.
+	 * @author Joffrey
+	 *
+	 */
 	class EndOfSim extends Event {
 		public void actions() {
 			Sim.stop();

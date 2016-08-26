@@ -39,10 +39,6 @@ public class Scan implements ISchedule{
 		}
 	}
 	
-	public boolean canTreat(Patient patient) {
-		return patient.isCurative()==forCurative;
-	}
-	
 	/*
 	 * Getters and setters
 	 */

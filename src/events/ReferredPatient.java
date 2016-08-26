@@ -6,37 +6,56 @@ import medical.Patient;
 import medical.Priority;
 import scheduling.Date;
 import tools.Time;
+import umontreal.iro.lecuyer.randvar.ExponentialGen;
 import umontreal.iro.lecuyer.randvar.RandomVariateGen;
-
-public class ReferredPatient extends ActivityEvent{
+import umontreal.iro.lecuyer.rng.MRG32k3a;
+import umontreal.iro.lecuyer.simevents.Event;
+/**
+ * Referencing of a patient
+ * @author Joffrey
+ *
+ */
+public class ReferredPatient extends Event{
 	/**
 	 * To generate the delay in between two patients arrivals
 	 */
-	RandomVariateGen genRef;
 	private Center center;
+	/**
+	 * To generate the delay in between two patients arrivals
+	 */
+	public static RandomVariateGen genReferredPatient=new ExponentialGen(new MRG32k3a(), 1.16);
+	/**
+	 * Delay separating two patients arrivals
+	 */
+	private int delay;
 	
-	public ReferredPatient(RandomVariateGen genRef, Center center) {
+	public ReferredPatient(Center center) {
 		super();
-		this.genRef = genRef;
 		this.center = center;
+		this.delay = 0;
 	}
 
-	public void childActions() {
+	/**
+	 * Refer a patient and schedule the next ReferredPatient event
+	 */
+	public void actions() {
 		if(center.isWelcome()){
-			new ReferredPatient(genRef, center).schedule(delay); // Next referred patient
+			this.generateDelay();
+			new ReferredPatient(center).schedule(getDelay()); // Next referred patient
 		}
 		Patient patient = new Patient(center);
 		center.getPatients().add(patient);
-		System.out.println("Referred patient ; patient id : "+patient.getId()+" with prio : "+patient.getPriority()+", min : "+Time.minIntoTheDay(Time.time()));
-		patient.setReferredDate(Date.dateNow());
+		center.getPatients().statSize().update();
+//		System.out.println("Referred patient ; patient id : "+patient.getId()+" with prio : "+patient.getPriority()+", min : "+Time.minIntoTheDay(Time.now()));
+		patient.setReferredDate(Date.now());
 		if(patient.getPriority() == Priority.P1 || patient.getPriority() == Priority.P2  ){
-			for (ChefSphere chef : center.getChefSpheres()) {
+			for (ChefSphere chef : center.getChefsSphere()) {
 				/*
 				 * we suppose, for now, that there is only one sphere corresponding to the patient's cancer
 				 */
 				if(chef.getSphere().getCancer()==patient.getCancer()){
 					patient.setSphere(chef.getSphere());
-					chef.processUrgentDemands(patient);
+					chef.processDemands(patient);
 					break;
 				}
 			}
@@ -50,16 +69,16 @@ public class ReferredPatient extends ActivityEvent{
 		}
 	}
 
-	@Override
-	public ActivityEvent clone() {
-		ReferredPatient clone = new ReferredPatient(genRef, center);
-		clone.setActivity(this.getActivity());
-		return clone;
+	public void generateDelay() {
+		this.setDelay((int)(genReferredPatient.nextDouble()*60));
 	}
 
-	@Override
-	public void generateDelay() {
-		this.delay=(int)(genRef.nextDouble()*60);
+	public int getDelay() {
+		return delay;
+	}
+
+	public void setDelay(int delay) {
+		this.delay = delay;
 	}
 
 }

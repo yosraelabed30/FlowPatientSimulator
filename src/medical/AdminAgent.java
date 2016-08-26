@@ -42,7 +42,7 @@ public class AdminAgent{
 
 	public void processDemands() {
 		this.sortDemands();
-		this.sendDemands(getCenter().getChefSpheres());
+		this.sendDemands(getCenter().getChefsSphere());
 	}
 
 	public Center getCenter() {

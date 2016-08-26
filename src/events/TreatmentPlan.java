@@ -14,20 +14,18 @@ public class TreatmentPlan extends ActivityEvent{
 	}
 
 	@Override
-	public void childActions() {
+	public void endActions() {
 		Doctor doctor = (Doctor) this.getiSchedule();
 		LinkedList<Patient> filesForPlanTreatment = doctor.getFilesForPlanTreatment();
 	
 		int numberOfFilesTreated =0;
-		int time = Time.time();
+		int time = Time.now();
 		int min = Time.minIntoTheDay(time);
 		while (!filesForPlanTreatment.isEmpty() && numberOfFilesTreated <= 4) {
 			Patient patient = filesForPlanTreatment.poll();
-//			System.out.println("The folder of the patient id : " + patient.getId() + " with priority "
-//					+ patient.getPriority() + " is supported for the Contouring " + min);
-//			numberOfFilesTreated++;
+			numberOfFilesTreated++;
 		}
-		System.out.println("TreatmentPlan ; done by doctor id : "+doctor.getId());
+//		System.out.println("TreatmentPlan ; done by doctor id : "+doctor.getId());
 		doctor.getSchedule().doNextTask();
 	}
 
@@ -41,6 +39,18 @@ public class TreatmentPlan extends ActivityEvent{
 	@Override
 	public void generateDelay() {
 		// TODO Auto-generated method stub
+		this.setDelay(0);
+	}
+
+	@Override
+	public void startActions() {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public boolean conditions() {
+		return true;
 	}
 
 }

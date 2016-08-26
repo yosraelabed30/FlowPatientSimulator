@@ -14,14 +14,11 @@ public class ArrivalConsultation extends ActivityEvent{
 	}
 
 	@Override
-	public void childActions() {
-		int time = Time.time();
+	public void endActions() {
+		int time = Time.now();
 		int min = Time.minIntoTheDay(time);
 		Patient patient = (Patient) this.getSchedule().getiSchedule();
-		System.out.println("Arrival Consultation ; Patient id : "+patient.getId()+ " with priority "+patient.getPriority()+" arrived, at min : "+min+", with doctor id : "+patient.getDoctor().getId());
-		if(patient.getSteps().size()!=0){
-			System.out.println("Arrival for more than consultation !");
-		}
+//		System.out.println("Arrival Consultation ; Patient id : "+patient.getId()+ " with priority "+patient.getPriority()+" arrived, at min : "+min+", with doctor id : "+patient.getDoctor().getId());
 		
 		if (this.getLateness()>0 && this.getLateness()!= Integer.MAX_VALUE){
 			System.out.println("late arrival");
@@ -29,7 +26,7 @@ public class ArrivalConsultation extends ActivityEvent{
 			
 		}
 
-		patient.setPresent(true);
+		patient.setPresentInCenter(true);
 	}
 
 	@Override
@@ -42,6 +39,16 @@ public class ArrivalConsultation extends ActivityEvent{
 	@Override
 	public void generateDelay() {
 		this.delay=0;
+	}
+
+	@Override
+	public boolean conditions() {
+		return true;
+	}
+
+	@Override
+	public void startActions() {
+		
 	}
 
 }

@@ -16,7 +16,6 @@ public class Date implements Comparable<Date>{
 		this.setWeekId(week);
 		this.setDayId(day);
 		this.setMinute(minute);
-		
 	}
 	
 	@Override
@@ -33,8 +32,8 @@ public class Date implements Comparable<Date>{
 	}
 	
 	
-	public static Date dateNow(){
-		return toDates(Time.time());
+	public static Date now(){
+		return toDates(Time.now());
 	}
 
 	public int getWeekId() {
@@ -89,8 +88,6 @@ public class Date implements Comparable<Date>{
 	}
 
 	public Date decrease() {
-
-		
 		int newWeekId = this.getWeekId();
 		int newDayId = this.getDayId();
 		int newMinute = this.getMinute();
@@ -124,7 +121,7 @@ public class Date implements Comparable<Date>{
 		int newWeekId = this.getWeekId();
 		int newDayId = this.getDayId();
 		int newMinute = this.getMinute();
-		int i = patient.getDelaysFirstTreatmentCTSim();
+		int i = patient.delaysInDaysFirstTreatmentCTSim();
 		boolean businessDay = isBusinessDays(newDayId);
 
 		if (patient.getPriority() == Priority.P2 || patient.getPriority() == Priority.P3
@@ -171,7 +168,7 @@ public class Date implements Comparable<Date>{
 		return date;
 	}
 
-	public boolean sameWeekAndDayAs(Date date){
+	public boolean checkSameWeekAndDayAs(Date date){
 		return this.getWeekId() == date.getWeekId() && this.getDayId() == date.getDayId();
 	}
 	
@@ -179,4 +176,17 @@ public class Date implements Comparable<Date>{
 		return new Date(this.getWeekId(), this.getDayId(), this.getMinute());
 	}
 
+	public void increaseMinute(){
+		Date date = toDates(this.toMinutes()+1);
+		this.setDayId(date.getDayId());
+		this.setWeekId(date.getWeekId());
+		this.setMinute(date.getMinute());
+	}
+
+	public void decreaseMinute() {
+		Date date = toDates(this.toMinutes()-1);
+		this.setDayId(date.getDayId());
+		this.setWeekId(date.getWeekId());
+		this.setMinute(date.getMinute());
+	}
 }

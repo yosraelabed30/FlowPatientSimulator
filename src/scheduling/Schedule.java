@@ -6,6 +6,7 @@ import java.util.LinkedList;
 
 import events.ActivityEvent;
 import medical.Center;
+import medical.Patient;
 import tools.Time;
 import umontreal.iro.lecuyer.simevents.Sim;
 
@@ -38,9 +39,12 @@ public class Schedule {
 	 * by default the id of the default week is -1 and it should not be changed
 	 */
 	protected Week defaultWeek;
-	
-	private Activity currentActivityBeingDone; //ie the events associated to that activity are being done, is used in the insert method in the class activity
-	
+	/**
+	 * the events associated to that activity are being done, is used in the
+	 * insert method in the class activity
+	 */
+	private Activity currentActivityBeingDone;
+
 	public Schedule(ISchedule iSchedule) {
 		super();
 		this.scheduleId = staticScheduleId++;
@@ -58,17 +62,18 @@ public class Schedule {
 	}
 
 	/**
-	 * Throws an IndexOutOfBoundsException if there is no week of id weekId in the this schedule
+	 * Throws an IndexOutOfBoundsException if there is no week of id weekId in
+	 * the this schedule
+	 * 
 	 * @param weekId
 	 * @return the week in the schedule with an id equal to weekId
 	 */
 	public Week getWeek(int weekId) {
 		Week res = null;
-		if(!this.weeks.isEmpty()){
+		if (!this.weeks.isEmpty()) {
 			int weekIndex = weekId - this.weeks.get(0).getWeekId();
 			res = this.weeks.get(weekIndex);
-		}
-		else{
+		} else {
 			throw new IndexOutOfBoundsException();
 		}
 		return res;
@@ -79,8 +84,9 @@ public class Schedule {
 	}
 
 	/**
-	 * Throws an IndexOutOfBoundsException if there is day corresponding to the input
-	 * It might be because the weekId and/or the dayId do not exist
+	 * Throws an IndexOutOfBoundsException if there is day corresponding to the
+	 * input It might be because the weekId and/or the dayId do not exist
+	 * 
 	 * @param weekId
 	 * @param dayId
 	 * @return the day id'ed dayId of the week id'ed weekId
@@ -105,7 +111,8 @@ public class Schedule {
 		return d.getBlock(blockId);
 	}
 
-	public Activity getActivity(int weekId, int dayId, int blockId, int activityId) {
+	public Activity getActivity(int weekId, int dayId, int blockId,
+			int activityId) {
 		Block b = null;
 		try {
 			b = this.getBlock(weekId, dayId, blockId);
@@ -119,41 +126,49 @@ public class Schedule {
 	 * do the next task of the day
 	 */
 	public void doNextTask() {
-		// TODO test
-		int time = (int) Sim.time();
-		int weekId = Time.weekCorrespondingToTime(time);
-		int dayId = Time.weekDayCorrespondingToTime(time);
-		int min = Time.minIntoTheDay(time);
+		if(this.getiSchedule().getClass()!=Patient.class || !((Patient)this.getiSchedule()).isOut()){
+			int time = (int) Sim.time();
+			int weekId = Time.weekCorrespondingToTime(time);
+			int dayId = Time.weekDayCorrespondingToTime(time);
+			int min = Time.minIntoTheDay(time);
+			
+			ArrayList<Block> blocks = null;
+			try {
+				blocks = this.getDay(weekId, dayId).getBlocks();
+			} catch (Exception e) {
+				this.addWeek(weekId);
+				blocks = this.getDay(weekId, dayId).getBlocks();
+			}
 
-		ArrayList<Block> blocks = this.getDay(weekId, dayId).getBlocks();
-
-		int delay = Integer.MAX_VALUE;
-		searchNext: for (Block block : blocks) {
-			for (Activity activity : block.getActivities()) {
-				if (activity.getStatus() == ActivityStatus.NotDone && activity.getActivityEvent().time()==-10) {
-					if(activity.getActivityEvent().getLateness()!=Integer.MAX_VALUE){
-						delay = Math.max(0, activity.getStart() - min)+activity.getActivityEvent().getLateness();
-						activity.getActivityEvent().schedule(delay);
-						break searchNext;
-					}
-					else{
-						activity.setStatus(ActivityStatus.ToPostpone);
+			int delay = Integer.MAX_VALUE;
+			searchNext: for (Block block : blocks) {
+				for (Activity activity : block.getActivities()) {
+					if (activity.getStatus() == ActivityStatus.NotDone
+							&& activity.getActivityEvent().time() == -10) {
+						if (activity.getActivityEvent().getLateness() != Integer.MAX_VALUE) {
+							delay = Math.max(0, activity.getStart() - min)
+									+ activity.getActivityEvent().getLateness();
+							activity.getActivityEvent().schedule(delay);
+							break searchNext;
+						} else {
+							activity.setStatus(ActivityStatus.ToPostpone);
+						}
 					}
 				}
 			}
 		}
-
 	}
 
 	/**
 	 * 
 	 * @param weekId
-	 * @return the week of id weekId, which has been created and added if it was not in the schedule
+	 * @return the week of id weekId, which has been created and added if it was
+	 *         not in the schedule
 	 */
 	public Week addWeek(int weekId) {
 		Week res = null;
 		try {
-			this.getWeek(weekId);
+			res = this.getWeek(weekId);
 		} catch (Exception e) {
 			this.defaultWeek.setWeekId(weekId);
 			res = defaultWeek.clone();
@@ -163,121 +178,38 @@ public class Schedule {
 		return res;
 	}
 
-	public Activity getFirstAvailability(int duration, BlockType blockType, int weekLowerBound, int dayLowerBound,
-			int minuteLowerBound) {
-		boolean found = false;
-
-		while (!found) {
-			Week w = null;
-			try {
-				w = this.getWeeks().get(weekLowerBound);
-			} catch (Exception e) {
-				w = this.addWeek(weekLowerBound);
-			}
-
-			Day d = w.getDays()[dayLowerBound];
-			for (Block b : d.getBlocks()) {
-				if (b.getType() == blockType) {
-					for (Activity a : b.getActivities()) {
-						if (a.getType() == ActivityType.Free
-								&& a.getEnd() - Math.max(a.getStart(), minuteLowerBound) > duration) {
-							return a;
-						}
-					}
-				}
-			}
-
-			minuteLowerBound = 0;
-			if (dayLowerBound == 6) {
-				dayLowerBound = 0;
-				weekLowerBound++;
-			} else {
-				dayLowerBound++;
-			}
-		}
-
-		return null;
-	}
-
-	public Activity getFirstAvailability(int duration, BlockType blockType) {
-		int time = (int) Sim.time();
-		int weekLowerBound = Time.weekCorrespondingToTime(time);
-		int dayLowerBound = Time.weekDayCorrespondingToTime(time);
-		int minuteLowerBound = Time.minIntoTheDay(time);
-		return getFirstAvailability(duration, blockType, weekLowerBound, dayLowerBound, minuteLowerBound);
-	}
-
-	public Activity getFirstAvailability(int duration, BlockType blockType, Date dateLB) {
-		return this.getFirstAvailability(duration, blockType, dateLB.getWeekId(), dateLB.getDayId(),
-				dateLB.getMinute());
-	}
-
-	public Activity getFirstAvailabilityInDay(int duration, BlockType blockType, Date dateLB) {
-		Activity res = null;
-		Day day = this.getDay(dateLB.getWeekId(), dateLB.getDayId()); // check
-																		// for
-																		// possible
-																		// exception
-																		// and
-																		// null
-																		// values
-		for (Block block : day.getBlocks()) {
-			if (block.getStart() >= dateLB.getMinute() && block.getType() == blockType) {
-				for (Activity activity : block.getActivities()) {
-					if (activity.getType() == ActivityType.Free && activity.duration() >= duration) {
-						res = activity;
-					}
-				}
-			}
-		}
-		return res;
-	}
-
 	/**
+	 * Used to be called findFreeActivityToInsertOtherActivity
 	 * 
-	 * @param weekId
-	 * @param dayId
-	 * @param start
-	 * @param end
-	 * @return null if no free activity found
+	 * @param date
+	 * @param duration
+	 * @return
 	 */
-	public Activity findFreeActivityToInsertOtherActivity(int weekId, int dayId, int start, int end) {
+	public Availability findAvailability(Date date, int duration) {
+		Availability free = null;
+		int start = date.getMinute();
+		int end = Time.end(start, duration);
+		int weekId = date.getWeekId();
 		try {
 			this.getWeek(weekId);
 		} catch (Exception e) {
-			int lastWeekId = this.getLastWeekId();
-			for (int i = lastWeekId + 1; i <= weekId; i++) {
-				this.addWeek(weekId);
-			}
+			this.addWeeks(weekId);
 		}
-		LinkedList<Activity> patientActivities = this.getBlock(weekId, dayId, 0).getActivities(); // blockId
-																									// =
-																									// 0
-																									// because
-																									// a
-																									// patient
-																									// has
-																									// only
-																									// one
-																									// block
-																									// in
-																									// its
-																									// schedule
-																									// each
-																									// day
-		Activity free = null;
-		for (Activity activity : patientActivities) {
-			if (activity.getType() == ActivityType.Free && activity.getStart() <= start && activity.getEnd() >= end) {
-				free = activity;
-				break;
+		int dayId = date.getDayId();
+		ArrayList<Block> blocks = this.getDay(weekId, dayId).getBlocks();
+		for (Block block : blocks) {
+			if (block.getStart() <= start && block.getEnd() >= end) {
+				for (Activity activity : block.getActivities()) {
+					if (activity.getType() == ActivityType.Free
+							&& activity.getStart() <= start
+							&& activity.getEnd() >= end) {
+						free = new Availability(activity, start, end);
+						break;
+					}
+				}
 			}
 		}
 		return free;
-	}
-
-	public Activity findFreeActivityToInsertOtherActivity(Date date, int duration) {
-		return this.findFreeActivityToInsertOtherActivity(date.getWeekId(), date.getDayId(), date.getMinute(),
-				date.getMinute() + duration);
 	}
 
 	public int getScheduleId() {
@@ -295,12 +227,13 @@ public class Schedule {
 	public void setDefaultWeek(Week defaultWeek) {
 		this.defaultWeek = defaultWeek;
 	}
-	
+
 	/**
 	 * Throws an IndexOutOfBoundException if the list weeks is empty
+	 * 
 	 * @return
 	 */
-	public Week getLastWeek(){
+	public Week getLastWeek() {
 		return this.getWeeks().get(this.getWeeks().size() - 1);
 	}
 
@@ -308,316 +241,38 @@ public class Schedule {
 		return this.getWeeks().get(this.getWeeks().size() - 1).getWeekId();
 	}
 
-	public Activity getFirstAvailabilityNotWeekend(int duration, BlockType blockType, int weekLowerBound,
-			int dayLowerBound, int minuteLowerBound) {
-		boolean found = false;
-
-		while (!found) {
-			Week w = null;
-			try {
-				w = this.getWeeks().get(weekLowerBound);
-			} catch (Exception e) {
-				w = this.addWeeks(weekLowerBound);
-			}
-
-			Day d = w.getDays()[dayLowerBound];
-			for (Block b : d.getBlocks()) {
-				if (b.getType() == blockType) {
-					for (Activity a : b.getActivities()) {
-						if (a.getType() == ActivityType.Free
-								&& a.getEnd() - Math.max(a.getStart(), minuteLowerBound) >= duration
-								&& a.getDay().getDayId() != 4 && a.getDay().getDayId() != 5
-								&& a.getDay().getDayId() != 6) {
-							return a;
-						}
-					}
-				}
-			}
-
-			minuteLowerBound = 0;
-			if (dayLowerBound == 6) {
-				dayLowerBound = 0;
-				weekLowerBound++;
-			} else {
-				dayLowerBound++;
-			}
-		}
-
-		return null;
-	}
-
 	/**
-	 * Add the missing weeks from the last week of the schedule to week id'ed weekId
-	 * If the weekId is inferior to the first weekId of the weeks, this method will throw an exception IndexOutOfBound
+	 * Add the missing weeks from the last week of the schedule to week id'ed
+	 * weekId If the weekId is inferior to the first weekId of the weeks, this
+	 * method will throw an exception IndexOutOfBound
+	 * 
 	 * @param weekId
 	 * @return week id'ed weekId
 	 */
 	public Week addWeeks(int weekId) {
 		Week res = null;
-		if(weekId>=0){
-			if(this.weeks.isEmpty()){
-				for(int newWeekId=0 ; newWeekId <= weekId ; newWeekId++){
+		if (weekId >= 0) {
+			if (this.weeks.isEmpty()) {
+				for (int newWeekId = 0; newWeekId <= weekId; newWeekId++) {
 					this.addWeek(newWeekId);
 				}
 				res = this.getLastWeek();
-			}
-			else{ 
+			} else {
 				int lastWeekId = this.getLastWeekId();
-				if(weekId>lastWeekId){
-					for(int newWeekId=lastWeekId+1 ; newWeekId <= weekId ; newWeekId++){
+				if (weekId > lastWeekId) {
+					for (int newWeekId = lastWeekId + 1; newWeekId <= weekId; newWeekId++) {
 						this.addWeek(newWeekId);
 					}
 					res = this.getLastWeek();
-				}
-				else{
+				} else {
 					res = this.getWeek(weekId);
 				}
 			}
 		}
-		if(res==null){
+		if (res == null) {
 			throw new IndexOutOfBoundsException();
 		}
 		return res;
-	}
-
-
-	public Activity getFirstAvailabilityNotFriday(int duration, ArrayList<BlockType> blockTypes, int weekLowerBound,
-			int dayLowerBound, int minuteLowerBound) {
-		boolean found = false;
-
-		while (!found) {
-
-			Week w = null;
-
-			try {
-				w = this.getWeeks().get(weekLowerBound);
-			} catch (Exception e) {
-				w = this.addWeek(weekLowerBound);
-			}
-
-			Day d = w.getDays()[dayLowerBound];
-			for (Block b : d.getBlocks()) {
-				if (blockTypes.contains(b.getType())) {
-					for (Activity a : b.getActivities()) {
-						if (a.getType() == ActivityType.Free
-								&& a.getEnd() - Math.max(a.getStart(), minuteLowerBound) > duration
-								&& a.getDay().getDayId() != 4) {
-							return a;
-						}
-					}
-				}
-			}
-			minuteLowerBound = 0;
-			if (dayLowerBound == 6) {
-				dayLowerBound = 0;
-				weekLowerBound++;
-			} else {
-				dayLowerBound++;
-			}
-		}
-
-		return null;
-	}
-
-	public Activity getFirstAvailability(int duration, ArrayList<BlockType> blockTypes, Date dateLowerBound) {
-
-		boolean found = false;
-		int weekLowerBound = dateLowerBound.getWeekId();
-		int dayLowerBound = dateLowerBound.getDayId();
-		int minuteLowerBound = dateLowerBound.getMinute();
-
-		while (!found) {
-			Week w = null;
-			try {
-				w = this.getWeeks().get(weekLowerBound);
-			} catch (Exception e) {
-				w = this.addWeek(weekLowerBound);
-			}
-
-			Day d = w.getDays()[dayLowerBound];
-			for (Block b : d.getBlocks()) {
-				if (blockTypes.contains(b.getType())) {
-					for (Activity a : b.getActivities()) {
-						if (a.getType() == ActivityType.Free
-								&& a.getEnd() - Math.max(a.getStart(), minuteLowerBound) > duration) {
-							return a;
-						}
-					}
-				}
-			}
-
-			minuteLowerBound = 0;
-			if (dayLowerBound == 6) {
-				dayLowerBound = 0;
-				weekLowerBound++;
-			} else {
-				dayLowerBound++;
-			}
-		}
-
-		return null;
-	}
-
-	public Activity getFirstAvailabilityFriday(int duration, BlockType blockType, Date dateLowerBound) {
-		boolean found = false;
-		int weekLowerBound = dateLowerBound.getWeekId();
-		int dayLowerBound = dateLowerBound.getDayId();
-		int minuteLowerBound = dateLowerBound.getMinute();
-
-		while (!found) {
-			Week w = null;
-			try {
-				w = this.getWeeks().get(weekLowerBound);
-			} catch (Exception e) {
-				w = this.addWeek(weekLowerBound);
-			}
-
-			Day d = w.getDays()[dayLowerBound];
-			for (Block b : d.getBlocks()) {
-				if (b.getType() == blockType) {
-					for (Activity a : b.getActivities()) {
-						if (a.getType() == ActivityType.Free
-								&& a.getEnd() - Math.max(a.getStart(), minuteLowerBound) > duration
-								&& a.getDay().getDayId() != 5 && a.getDay().getDayId() != 6) {
-							return a;
-						}
-					}
-				}
-			}
-
-			minuteLowerBound = 0;
-			if (dayLowerBound == 6) {
-				dayLowerBound = 0;
-				weekLowerBound++;
-			} else {
-				dayLowerBound++;
-			}
-		}
-		return null;
-	}
-
-	public Activity getFirstAvailabilityFridayReserved(int duration, ArrayList<BlockType> blockTypes,
-			Date dateLowerBound) {
-		boolean found = false;
-		int weekLowerBound = dateLowerBound.getWeekId();
-		int dayLowerBound = dateLowerBound.getDayId();
-		int minuteLowerBound = dateLowerBound.getMinute();
-
-		while (!found) {
-			Week w = null;
-			try {
-				w = this.getWeeks().get(weekLowerBound);
-			} catch (Exception e) {
-				w = this.addWeek(weekLowerBound);
-			}
-
-			Day d = w.getDays()[dayLowerBound];
-			for (Block b : d.getBlocks()) {
-				if (blockTypes.contains(b.getType())) {
-					for (Activity a : b.getActivities()) {
-						if (a.getType() == ActivityType.Free
-								&& a.getEnd() - Math.max(a.getStart(), minuteLowerBound) > duration
-								&& a.getDay().getDayId() != 5 && a.getDay().getDayId() != 6) {
-							return a;
-						}
-					}
-				}
-			}
-
-			minuteLowerBound = 0;
-			if (dayLowerBound == 6) {
-				dayLowerBound = 0;
-				weekLowerBound++;
-			} else {
-				dayLowerBound++;
-			}
-		}
-
-		return null;
-	}
-
-	public Activity getFirstAvailabilityNotWeekend(int duration, BlockType blockType, int weekLowerBound,
-			int dayLowerBound, int minuteLowerBound, int weekUpperBound, int dayUpperBound, int minuteUpperBound) {
-		boolean found = false;
-		Date date = new Date(weekLowerBound, dayLowerBound, minuteLowerBound);
-		Activity activity = null;
-
-		while (date.getWeekId() <= weekUpperBound && date.getDayId() <= dayUpperBound && !found) {
-
-				Week w1 = null;
-
-				try {
-					w1 = this.getWeeks().get(weekLowerBound);
-				} catch (Exception e) {
-					w1 = this.addWeeks(weekLowerBound);
-				}
-
-				Day d = w1.getDays()[dayLowerBound];
-				for (Block b : d.getBlocks()) {
-
-					if (b.getType() == blockType) {
-						for (Activity a : b.getActivities()) {
-							if (a.getType() == ActivityType.Free
-									&& a.getEnd() - Math.max(a.getStart(), minuteLowerBound) > duration
-									&& a.getDay().getDayId() != 5 && a.getDay().getDayId() != 6) {
-								return activity = a;
-
-							}
-						}
-					}
-
-				minuteLowerBound = 0;
-				date = date.increaseWeekend();
-
-			}
-			activity = null;
-
-		}
-		return activity;
-	}
-
-	public Activity getFirstAvailabilityNotWeekend(int duration, java.util.ArrayList<BlockType> blockTypes,
-			int weekLowerBound, int dayLowerBound, int minuteLowerBound, int weekUpperBound, int dayUpperBound,
-			int minuteUpperBound) {
-		boolean found = false;
-		Date date = new Date(weekLowerBound, dayLowerBound, minuteLowerBound);
-		Activity activity = null;
-
-
-		while (date.getWeekId() <= weekUpperBound && date.getDayId() <= dayUpperBound && !found) {
-
-			Week w1 = null;
-			try {
-				w1 = this.getWeeks().get(weekLowerBound);
-			} catch (Exception e) {
-				w1 = this.addWeeks(weekLowerBound);
-			}
-			
-
-
-			Day d = w1.getDays()[dayLowerBound];
-			for (Block b : d.getBlocks()) {
-				if (blockTypes.contains(b.getType())) {
-					for (Activity a : b.getActivities()) {
-						if (a.getType() == ActivityType.Free
-								&& a.getEnd() - Math.max(a.getStart(), minuteLowerBound) > duration
-								&& a.getDay().getDayId() != 5 && a.getDay().getDayId() != 6) {
-							return activity = a;
-
-						}
-					}
-				}
-			}
-
-			minuteLowerBound = 0;
-			date = date.increaseWeekend();
-
-			activity = null;
-
-		}
-
-		return activity;
-
 	}
 
 	public Activity getActivityAssociated(Date date) {
@@ -629,7 +284,8 @@ public class Schedule {
 		day = this.getDay(weekId, dayId);
 		for (Block blocks : day.getBlocks()) {
 			for (Activity activity : blocks.getActivities()) {
-				if (activity.getStart() <= date.getMinute() && date.getMinute() <= activity.getEnd()) {
+				if (activity.getStart() <= date.getMinute()
+						&& date.getMinute() <= activity.getEnd()) {
 					activityAssociated = activity;
 				}
 			}
@@ -644,180 +300,6 @@ public class Schedule {
 
 	}
 
-	public Activity getFirstAvailabilityNotWeekendWithoutConstraint(int duration, BlockType scan, int weekUpperBound,
-			int dayUpperBound, int minuteUpperBound) {
-		boolean found = false;
-		Date date = Date.dateNow().increase();
-		Activity activity = null;
-
-		while (date.getWeekId() <= weekUpperBound && date.getDayId() <= dayUpperBound) {
-			while (!found) {
-
-				Week w = null;
-				try {
-					w = this.getWeeks().get(weekUpperBound);
-				} catch (Exception e) {
-					w = this.addWeeks(weekUpperBound);
-				}
-
-				Day d = w.getDays()[date.getDayId()];
-				for (Block b : d.getBlocks()) {
-					if (b.getType() == BlockType.Scan) {
-						for (Activity a : b.getActivities()) {
-							if (a.getType() == ActivityType.Free
-									&& a.getEnd() - Math.max(a.getStart(), date.getMinute()) > duration
-									&& a.getDay().getDayId() != 5 && a.getDay().getDayId() != 6) {
-								return activity = a;
-
-							}
-						}
-					}
-				}
-
-				date.setMinute(0);
-				date = date.increaseWeekend();
-			}
-			activity = null;
-
-		}
-
-		return activity;
-	}
-
-	public Activity getFirstAvailabilityNotWeekendWithoutConstraint(int duration,
-			java.util.ArrayList<BlockType> blockTypes, int weekUpperBound, int dayUpperBound, int minuteUpperBound) {
-		boolean found = false;
-		Date date = Date.dateNow();
-		Activity activity = null;
-
-		while (date.getWeekId() <= weekUpperBound && date.getDayId() <= dayUpperBound) {
-			while (!found) {
-
-				Week w = null;
-				try {
-					w = this.getWeeks().get(weekUpperBound);
-				} catch (Exception e) {
-					w = this.addWeeks(weekUpperBound);
-				}
-
-				Day d = w.getDays()[date.getDayId()];
-				for (Block b : d.getBlocks()) {
-					if (blockTypes.contains(b.getType())) {
-						for (Activity a : b.getActivities()) {
-							if (a.getType() == ActivityType.Free
-									&& a.getEnd() - Math.max(a.getStart(), date.getMinute()) > duration
-									&& a.getDay().getDayId() != 5 && a.getDay().getDayId() != 6) {
-								return activity = a;
-
-							}
-						}
-					}
-				}
-
-				date.setMinute(0);
-				date = date.increaseWeekend();
-			}
-			activity = null;
-
-		}
-
-		return activity;
-	}
-
-	public Activity getFirstAvailabilityFridayQuotas(int duration, BlockType blockType, Date dateLowerBound) {
-		boolean found = false;
-		int weekLowerBound = dateLowerBound.getWeekId();
-		int dayLowerBound = dateLowerBound.getDayId();
-		int minuteLowerBound = dateLowerBound.getMinute();
-
-		while (!found) {
-			Week w = null;
-			try {
-				w = this.getWeeks().get(weekLowerBound);
-			} catch (Exception e) {
-				w = this.addWeek(weekLowerBound);
-			}
-			
-			if (w.getQuotas() > 0) {
-
-				Day d = w.getDays()[dayLowerBound];
-				for (Block b : d.getBlocks()) {
-					if (b.getType() == blockType) {
-						for (Activity a : b.getActivities()) {
-							if (a.getType() == ActivityType.Free
-									&& a.getEnd() - Math.max(a.getStart(), minuteLowerBound) > duration
-									&& a.getDay().getDayId() != 5 && a.getDay().getDayId() != 6) {
-								return a;
-							}
-						}
-					}
-				}
-
-				minuteLowerBound = 0;
-				if (dayLowerBound == 6) {
-					dayLowerBound = 0;
-					weekLowerBound++;
-				} else {
-					dayLowerBound++;
-				}
-			}
-			else{
-				dayLowerBound = 0;
-				weekLowerBound++;
-			}
-		}
-	
-		return null;
-	}
-
-	public Activity getFirstAvailabilityBeforeTheEndOfTheDay(int duration, BlockType treatment, int arrivalMinutes) {
-
-		Date date = Date.toDates(arrivalMinutes);
-		Day day = this.getDay(date.getWeekId(), date.getDayId());
-		Activity activity = null;
-
-		for (Block block : day.getBlocks()) {
-			if (block.getType() == BlockType.Treatment && block.getEnd() >= arrivalMinutes
-					&& block.getEnd() <= 18 * 60) {
-				for (Activity a : block.getActivities()) {
-					if (a.getType() == ActivityType.Free
-							&& a.getEnd() - Math.max(a.getStart(), date.getMinute()) > duration) {
-						return activity = a;
-
-					}
-
-				}
-			}
-
-		}
-
-		return activity;
-	}
-
-	public Activity getFirstAvailabilityFridayQuotasBeforeTheEndOfTheDay(int duration, BlockType consultation,
-			Date date) {
-		int weekId = date.getWeekId();
-		int dayId = date.getDayId();
-		int minute= date.getMinute();
-		Day day= this.getDay(weekId, dayId);
-
-		for (Block block : day.getBlocks()) {
-			if (block.getType() == BlockType.Consultation && block.getEnd() >= minute
-					&& block.getEnd() <= 18 * 60) {
-				for (Activity a : block.getActivities()) {
-					if (a.getType() == ActivityType.Free
-									&& a.getEnd() - Math.max(a.getStart(), minute) > duration ) {
-								return a;
-					}
-				}
-			}
-		}
-
-
-		
-		return null;
-	}
-
 	public ISchedule getiSchedule() {
 		return iSchedule;
 	}
@@ -825,83 +307,112 @@ public class Schedule {
 	public void setiSchedule(ISchedule iSchedule) {
 		this.iSchedule = iSchedule;
 	}
-	
-	public Availability getFirstAvailabitlity(int duration, ArrayList<BlockType> blockTypes,
+
+	public Availability findFirstAvailabitlity(ActivityType activityType,
+			int duration, ArrayList<BlockType> blockTypes,
 			ArrayList<Integer> daysForbidden) {
-		return this.getFirstAvailability(duration, blockTypes, daysForbidden, Date.dateNow(), Date.infinity);
-	}
-	
-	public Availability getFirstAvailability(int duration,
-			ArrayList<BlockType> blockTypes, ArrayList<Integer> daysForbidden,
-			Date dateLowerBound) {
-		return this.getFirstAvailability(duration, blockTypes, daysForbidden, dateLowerBound, Date.infinity);
+		return this.findFirstAvailability(activityType, duration, blockTypes,
+				daysForbidden, Date.now(), Date.infinity);
 	}
 
-	public Availability getFirstAvailability(int duration,
-			ArrayList<BlockType> blockTypes, ArrayList<Integer> daysForbidden,
-			Date dateLowerBound, Date dateUpperBound) {
-		return this.getFirstAvailability(duration, blockTypes, daysForbidden, new ArrayList<Activity>(), dateLowerBound, dateUpperBound);
+	public Availability findFirstAvailability(ActivityType activityType,
+			int duration, ArrayList<BlockType> blockTypes,
+			ArrayList<Integer> daysForbidden, Date dateLowerBound) {
+		return this.findFirstAvailability(activityType, duration, blockTypes,
+				daysForbidden, dateLowerBound, Date.infinity);
 	}
 
-	public Availability getFirstAvailability(int duration,
-			ArrayList<BlockType> blockTypes,
+	public Availability findFirstAvailability(ActivityType activityType,
+			int duration, ArrayList<BlockType> blockTypes,
+			ArrayList<Integer> daysForbidden, Date dateLowerBound,
+			Date dateUpperBound) {
+		return this.findFirstAvailability(activityType, duration, blockTypes,
+				daysForbidden, new ArrayList<Activity>(), dateLowerBound,
+				dateUpperBound);
+	}
+
+	/**
+	 * @param activityType for which you wish to find an availability
+	 * @param duration of the availability at minimal
+	 * @param blockTypes the availability must be in a block of one of those types
+	 * @param daysForbidden list of integer between 0 and 6, of forbidden days for the availability
+	 * @param activitiesToAvoid list of activities to avoid, the availability returned should not overlap any of those activities
+	 * @param dateLowerBound date at which we start to find the availability, included
+	 * @param dateUpperBound last possible date of the availability, included
+	 * @return the first availability in this schedule, respecting the constraints linked to the inputs
+	 */
+	public Availability findFirstAvailability(ActivityType activityType,
+			int duration, ArrayList<BlockType> blockTypes,
 			ArrayList<Integer> daysForbidden,
 			ArrayList<Activity> activitiesToAvoid, Date dateLowerBound,
 			Date dateUpperBound) {
-		 
+
 		Availability avail = null;
-		
-		while (avail == null && dateLowerBound.compareTo(dateUpperBound) == -1) {
+
+		while (avail == null && dateLowerBound.compareTo(dateUpperBound) <= 0) {
 			Week week = addWeeks(dateLowerBound.getWeekId());
-			Day day = this.getDay(dateLowerBound.getWeekId(),
-					dateLowerBound.getDayId());
-			if (!daysForbidden.contains(day.getDayId())
-					&& (!blockTypes.contains(BlockType.Consultation) || (blockTypes
-							.contains(BlockType.Consultation) && week
-							.getQuotas() > 0))) {
-				if (!dateLowerBound.sameWeekAndDayAs(dateUpperBound)) {
-					for (Block block : day.getBlocks()) {
-						if (blockTypes.contains(block.getType())
-								&& block.getEnd() >= dateLowerBound.getMinute()) {
-							for (Activity activity : block.getActivities()) {
-								if (activity.getType() == ActivityType.Free
-										&& activity.getEnd()
-												- Math.max(dateLowerBound
-														.getMinute(), activity
-														.getStart()) >= duration) {
-									ArrayList<ArrayList<Integer>> remaining = activity.exclude(activitiesToAvoid);
-									for (ArrayList<Integer> interval : remaining) {
-										int end = Math.min(interval.get(1), dateUpperBound.getMinute());
-										int start = Math.max(interval.get(0), dateLowerBound.getMinute());
-										if(( end - start )>=duration){
-											avail = new Availability(activity, start, end);
-											return avail;
+			if (activityType != ActivityType.Consultation
+					|| week.getQuotas() > 0) {
+				Day day = this.getDay(dateLowerBound.getWeekId(),
+						dateLowerBound.getDayId());
+				if (!daysForbidden.contains(day.getDayId())) {
+					if (!dateLowerBound.checkSameWeekAndDayAs(dateUpperBound)) {
+						for (Block block : day.getBlocks()) {
+							if (blockTypes.contains(block.getType())
+									&& block.getEnd() >= dateLowerBound
+											.getMinute()) {
+								for (Activity activity : block.getActivities()) {
+									if (activity.getType() == ActivityType.Free
+											&& Time.duration(Math.max(
+													dateLowerBound.getMinute(),
+													activity.getStart()),
+													activity.getEnd()) >= duration) {
+										ArrayList<ArrayList<Integer>> remaining = activity
+												.exclude(activitiesToAvoid);
+										for (ArrayList<Integer> interval : remaining) {
+											int end = Math.min(interval.get(1),
+													dateUpperBound.getMinute());
+											int start = Math.max(
+													interval.get(0),
+													dateLowerBound.getMinute());
+											if (Time.duration(start, end) >= duration) {
+												avail = new Availability(
+														activity, start, end);
+												return avail;
+											}
 										}
 									}
 								}
 							}
 						}
-					}
-				} else {
-					for (Block block : day.getBlocks()) {
-						if (blockTypes.contains(block.getType())
-								&& block.getEnd() >= dateLowerBound.getMinute()
-								&& block.getStart() <= dateUpperBound
-										.getMinute()) {
-							for (Activity activity : block.getActivities()) {
-								if (activity.getType() == ActivityType.Free
-										&& Math.min(dateUpperBound.getMinute(),
-												activity.getEnd())
-												- Math.max(dateLowerBound
-														.getMinute(), activity
-														.getStart()) >= duration) {
-									ArrayList<ArrayList<Integer>> remaining = activity.exclude(activitiesToAvoid);
-									for (ArrayList<Integer> interval : remaining) {
-										int end = Math.min(interval.get(1), dateUpperBound.getMinute());
-										int start = Math.max(interval.get(0), dateLowerBound.getMinute());
-										if(( end - start )>=duration){
-											avail = new Availability(activity, start, end);
-											return avail;
+					} else {
+						for (Block block : day.getBlocks()) {
+							if (blockTypes.contains(block.getType())
+									&& block.getEnd() >= dateLowerBound
+											.getMinute()
+									&& block.getStart() <= dateUpperBound
+											.getMinute()) {
+								for (Activity activity : block.getActivities()) {
+									if (activity.getType() == ActivityType.Free
+											&& Time.duration(Math.max(
+													dateLowerBound.getMinute(),
+													activity.getStart()), Math
+													.min(dateUpperBound
+															.getMinute(),
+															activity.getEnd())) >= duration) {
+										ArrayList<ArrayList<Integer>> remaining = activity
+												.exclude(activitiesToAvoid);
+										for (ArrayList<Integer> interval : remaining) {
+											int end = Math.min(interval.get(1),
+													dateUpperBound.getMinute());
+											int start = Math.max(
+													interval.get(0),
+													dateLowerBound.getMinute());
+											if (Time.duration(start, end) >= duration) {
+												avail = new Availability(
+														activity, start, end);
+												return avail;
+											}
 										}
 									}
 								}
