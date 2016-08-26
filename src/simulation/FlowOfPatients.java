@@ -49,14 +49,15 @@ public class FlowOfPatients {
 	 * Medical {@link Center}
 	 */
 	public Center center;
-	
+	/**
+	 * example of patient displayed at the end of the simulation in the console
+	 */
 	public static Patient test1=null;
+	/**
+	 * example of patient displayed at the end of the simulation in the console
+	 */
 	public static Patient test2=null;
 	
-	/**
-	 * Constructor initiating the day of the week to -1, since it is immediately increased
-	 * {@link #genReferredPatient} is instanciated with an ExponentialGen, see Taobane memoire for more info
-	 */
 	public FlowOfPatients() {
 		super();
 		this.center = new Center();
@@ -72,10 +73,10 @@ public class FlowOfPatients {
 		double time = System.currentTimeMillis();
 		FlowOfPatients test = new FlowOfPatients();
 		test.setCenter(test.CHUM());
-//		test.simulateOneRun(525600*2);
+		test.simulateOneRun(525600*2);
 //		test.simulateOneRun(525600);
 //		test.simulateOneRun(288000);
-		test.simulateOneRun(100000);
+//		test.simulateOneRun(100000);
 //		test.simulateOneRun(30000);
 //		test.simulateOneRun(72*60);
 		
@@ -115,6 +116,10 @@ public class FlowOfPatients {
 		this.center = center;
 	}
 
+	/**
+	 * 
+	 * @return an instance of Center modeling the Centre Hospitalier de l'Université de Montréal or CHUM for short.
+	 */
 	public Center CHUM(){
 		Center chum = new Center();
 		for (Cancer cancer : Cancer.getCancers()) {
@@ -147,7 +152,6 @@ public class FlowOfPatients {
 			
 			ChefSphere chef = new ChefSphere(sphere);
 			sphere.setChefSphere(chef);
-			chum.getChefSpheres().add(chef);
 		}
 		
 		int nbTreatmentMachines=30;
@@ -199,6 +203,11 @@ public class FlowOfPatients {
 		return chum;
 	}
 	
+	/**
+	 * Common event class for a simulation corresponding to the end of the simulation.
+	 * @author Joffrey
+	 *
+	 */
 	class EndOfSim extends Event {
 		public void actions() {
 			Sim.stop();

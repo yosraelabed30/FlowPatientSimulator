@@ -10,7 +10,11 @@ import umontreal.iro.lecuyer.randvar.ExponentialGen;
 import umontreal.iro.lecuyer.randvar.RandomVariateGen;
 import umontreal.iro.lecuyer.rng.MRG32k3a;
 import umontreal.iro.lecuyer.simevents.Event;
-
+/**
+ * Referencing of a patient
+ * @author Joffrey
+ *
+ */
 public class ReferredPatient extends Event{
 	/**
 	 * To generate the delay in between two patients arrivals
@@ -31,6 +35,9 @@ public class ReferredPatient extends Event{
 		this.delay = 0;
 	}
 
+	/**
+	 * Refer a patient and schedule the next ReferredPatient event
+	 */
 	public void actions() {
 		if(center.isWelcome()){
 			this.generateDelay();
@@ -42,7 +49,7 @@ public class ReferredPatient extends Event{
 //		System.out.println("Referred patient ; patient id : "+patient.getId()+" with prio : "+patient.getPriority()+", min : "+Time.minIntoTheDay(Time.now()));
 		patient.setReferredDate(Date.now());
 		if(patient.getPriority() == Priority.P1 || patient.getPriority() == Priority.P2  ){
-			for (ChefSphere chef : center.getChefSpheres()) {
+			for (ChefSphere chef : center.getChefsSphere()) {
 				/*
 				 * we suppose, for now, that there is only one sphere corresponding to the patient's cancer
 				 */

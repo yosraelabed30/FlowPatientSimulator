@@ -17,7 +17,11 @@ import scheduling.Date;
 import tools.Time;
 import umontreal.iro.lecuyer.simevents.Event;
 import umontreal.iro.lecuyer.simevents.LinkedListStat;
-
+/**
+ * Closing of a center
+ * @author Joffrey
+ *
+ */
 public class Closing extends Event{
 	private Center center;
 	
@@ -40,7 +44,7 @@ public class Closing extends Event{
 		new Opening(this.getCenter()).schedule(delay);
 
 		getCenter().getAdminAgent().processDemands();
-		for (ChefSphere chef : getCenter().getChefSpheres()) {
+		for (ChefSphere chef : getCenter().getChefsSphere()) {
 			chef.processDemands();
 		}
 		getCenter().getTechnologist().processPatientFilesForPlanification();

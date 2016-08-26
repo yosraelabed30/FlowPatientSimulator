@@ -12,6 +12,11 @@ import umontreal.iro.lecuyer.rng.MRG32k3a;
 import umontreal.iro.lecuyer.simevents.Event;
 import static events.ReferredPatient.genReferredPatient;
 
+/**
+ * Opening of a center
+ * @author Joffrey
+ *
+ */
 public class Opening extends Event{
 	private Center center;
 
@@ -27,7 +32,9 @@ public class Opening extends Event{
 		super();
 		this.setCenter(center);
 	}
-
+	/**
+	 * the center opens and the patients are referred until closing.
+	 */
 	public void actions() {
 		int time = Time.now();
 		int dayOfWeek = Time.weekDayCorrespondingToTime(Time.now());
@@ -52,7 +59,7 @@ public class Opening extends Event{
 		new Closing(this.getCenter()).schedule(10*60);
 		new ReferredPatient(getCenter()).schedule ((int)(genReferredPatient.nextDouble()*60));
 		getCenter().doScheduleToday();
-		ArrayList <ChefSphere> chefSpheres= getCenter().getChefSpheres();
+		ArrayList <ChefSphere> chefSpheres= getCenter().getChefsSphere();
 		
 		if (date.getWeekId()!=0 || date.getDayId()!=0){
 			for (ChefSphere chefSphere : chefSpheres) {

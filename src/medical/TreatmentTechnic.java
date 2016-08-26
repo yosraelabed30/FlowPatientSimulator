@@ -4,6 +4,11 @@ import umontreal.iro.lecuyer.randvar.RandomVariateGen;
 import umontreal.iro.lecuyer.randvar.UniformGen;
 import umontreal.iro.lecuyer.rng.MRG32k3a;
 
+/**
+ * Treatment technics of the cancer
+ * @author Joffrey
+ *
+ */
 public enum TreatmentTechnic {
 	TXUroRA(0),
 	TXColonneCK(1),
