@@ -32,7 +32,7 @@ public class ChefSphere {
 		/**
 		 * TODO fix the lateness issue : a patient is late for everything
 		 */
-		int lateness= 0;
+		int lateness= -15;
 		Date dateLowerBound= Date.now(); 
 		Availability best= null; 
 		ArrayList<Doctor> competentDoctors = new ArrayList<>();

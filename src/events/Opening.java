@@ -39,7 +39,7 @@ public class Opening extends Event{
 		int time = Time.now();
 		int dayOfWeek = Time.weekDayCorrespondingToTime(Time.now());
 		int week = Time.weekCorrespondingToTime(time);
-		int day = Time.dayCorrespondingToTime(time);
+		int day = Time.toNbOfDays(time);
 		if(dayOfWeek==0){
 			getCenter().addWeek();
 		}
@@ -51,14 +51,12 @@ public class Opening extends Event{
 		}
 		Date date = Date.now();
 		
-		System.out.println("\nDayStart");
-		System.out.println("New day in minutes : "+time+" it's a "+dayOfWeek+", of week "+week+" and it is day "+day);
+		System.out.println("Opening, in minutes : "+time+" it's a "+dayOfWeek+", of week "+week+" and it is day "+day);
 		
 		getCenter().getTechnologist().processPatientFilesForPreContouring();
-		
-		new Closing(this.getCenter()).schedule(10*60);
+		int delay = this.getCenter().getClosingTime()-this.getCenter().getOpeningTime();
+		new Closing(this.getCenter()).schedule(delay);
 		new ReferredPatient(getCenter()).schedule ((int)(genReferredPatient.nextDouble()*60));
-		getCenter().doScheduleToday();
 		ArrayList <ChefSphere> chefSpheres= getCenter().getChefsSphere();
 		
 		if (date.getWeekId()!=0 || date.getDayId()!=0){

@@ -1,0 +1,13 @@
+CHUM
+480	1080
+Spheres
+digestif
+peau
+urathelial
+snc
+pulmonaire
+lymphome
+orl
+sein
+gynecologie
+metastase

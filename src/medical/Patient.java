@@ -321,17 +321,17 @@ public class Patient  implements ISchedule{
 		String s = "Patient id : "+this.getId()+", priority : "+this.getPriority()+" ";
 		s+="\nReferred, "+this.getReferredDate();
 		
-		int nbMin=-1;
+		Date diff = null;
 		boolean firstTreatment = true;
 		for (Activity activity : this.getSteps()) {
 			s+="\n"+activity.getType()+", "+activity.getDate();
 			if(activity.getType()==ActivityType.Treatment && firstTreatment){
 				firstTreatment=false;
-				nbMin = activity.getDate().toMinutes()-this.getReferredDate().toMinutes();
+				diff = activity.getDate().difference(this.getSteps().get(0).getDate());
 			}
 		}
-
-		s+="\nDuration between the consultation and the first treatment : "+Date.toDates(nbMin);
+		
+		s+="\nDuration between the consultation and the first treatment : "+diff;
 		return s;
 	}
 }

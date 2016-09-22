@@ -17,6 +17,7 @@ public class Sphere{
 		this.setPatients(patients);
 	
 	}
+	
 	public Cancer getCancer() {
 		return cancer;
 	}

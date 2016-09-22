@@ -1,0 +1,125 @@
+Doctor	0
+Speciality	Peau		Urathelial	Lymphome	ORL	Sein	Gynecologie	Metastase
+Day	0
+0	Consultation	510	720
+1	Consultation	780	1050
+Day	1
+0	Planification	510	720
+1	Planification	780	1050
+Day	2
+0	Consultation	510	720
+1	Dosimetry	780	1050
+Day	3
+0	Consultation	510	720
+1	Contouring	780	1050
+Day	4
+0	Consultation	510	720
+1	Dosimetry	780	1050
+
+Doctor	1
+Speciality	Urathelial	ORL	Sein	Gynecologie	Metastase
+Day	0
+0	Consultation	510	720
+1	Dosimetry	780	1050
+Day	1
+0	Consultation	510	720
+1	Consultation	780	1050
+Day	2
+0	Planification	510	720
+1	Planification	780	1050
+Day	3
+0	Consultation	510	720
+1	Dosimetry	780	1050
+Day	4
+0	Consultation	510	720
+1	Contouring	780	1050
+
+Doctor	2
+Speciality	Digestif	Pulmonaire	ORL	Sein	Metastase
+Day	0
+0	Consultation	510	720
+1	Contouring	780	1050
+Day	1
+0	Consultation	510	720
+1	Dosimetry	780	1050
+Day	2
+0	Consultation	510	720
+1	Consultation	780	1050
+Day	3
+0	Planification	510	720
+1	Planification	780	1050
+Day	4
+0	Consultation	510	720
+1	Dosimetry	780	1050
+
+Doctor	3
+Speciality	Digestif	Pulmonaire	ORL	Sein	Metastase
+Day	0
+0	Consultation	510	720
+1	Dosimetry	780	1050
+Day	1
+0	Consultation	510	720
+1	Contouring	780	1050
+Day	2
+0	Consultation	510	720
+1	Dosimetry	780	1050
+Day	3
+0	Consultation	510	720
+1	Consultation	780	1050
+Day	4
+0	Planification	510	720
+1	Planification	780	1050
+
+Doctor	4
+Speciality	Urathelial	SNC	Pulmonaire	Sein	Metastase
+Day	0
+0	Planification	510	720
+1	Planification	780	1050
+Day	1
+0	Consultation	510	720
+1	Dosimetry	780	1050
+Day	2
+0	Consultation	510	720
+1	Contouring	780	1050
+Day	3
+0	Consultation	510	720
+1	Dosimetry	780	1050
+Day	4
+0	Consultation	510	720
+1	Consultation	780	1050
+
+Doctor	5
+Speciality	Digestif	Urathelial	SNC	Gynecologie	Metastase	
+Day	0
+0	Consultation	510	720
+1	Consultation	780	1050
+Day	1
+0	Planification	510	720
+1	Planification	780	1050
+Day	2
+0	Consultation	510	720
+1	Dosimetry	780	1050
+Day	3
+0	Consultation	510	720
+1	Contouring	780	1050
+Day	4
+0	Consultation	510	720
+1	Dosimetry	780	1050
+
+Doctor	6
+Speciality	SNC	Pulmonaire	Sein	Metastase
+Day	0
+0	Consultation	510	720
+1	Dosimetry	780	1050
+Day	1
+0	Consultation	510	720
+1	Consultation	780	1050
+Day	2
+0	Planification	510	720
+1	Planification	780	1050
+Day	3
+0	Consultation	510	720
+1	Dosimetry	780	1050
+Day	4
+0	Consultation	510	720
+1	Contouring	780	1050

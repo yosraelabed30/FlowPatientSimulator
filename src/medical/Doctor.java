@@ -1,5 +1,13 @@
 package medical;
 
+import hep.aida.ref.Converter;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.nio.charset.Charset;
+import java.nio.file.FileSystems;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -17,6 +25,7 @@ import tools.Time;
 import umontreal.iro.lecuyer.randvar.RandomVariateGen;
 import umontreal.iro.lecuyer.randvar.UniformGen;
 import umontreal.iro.lecuyer.rng.MRG32k3a;
+import umontreal.iro.lecuyer.util.TextDataReader;
 import fileComparators.FileComparator1;
 
 public class Doctor implements ISchedule {
@@ -37,7 +46,9 @@ public class Doctor implements ISchedule {
 		this.filesForContouring = new LinkedList<>();
 		this.filesForPlanTreatment = new LinkedList<>();
 		this.schedule = new Schedule(this);
-		for (int i = 0; i < 7; i++) {
+		
+		for (int i = 0; i < blocksTab.size(); i++) { //for each day in the week
+			//sets the day for each block
 			for (Block block : blocksTab.get(i)) {
 				block.setDay(getSchedule().getDefaultWeek().getDay(i));
 			}
@@ -52,6 +63,53 @@ public class Doctor implements ISchedule {
 
 	}
 
+	/**
+	 * The center(s?) must already be created, so that a doctor can be assigned to a sphere
+	 * @return
+	 */
+	public static ArrayList<Doctor> doctorsFileReader(Center center){
+		String[] strings = null;
+		Path path = FileSystems.getDefault().getPath("ScheduleDoctors.txt");
+		Charset charset = Charset.forName("US-ASCII");
+		ArrayList<ArrayList<Block>> blocksTab = null;
+		ArrayList<Doctor> doctors = new ArrayList<Doctor>();
+		ArrayList<Sphere> spheres = new ArrayList<Sphere>();
+		try (BufferedReader reader = Files.newBufferedReader(path, charset)) {
+			strings = TextDataReader.readStringData(reader);
+			String regex="\t"; //regex for the tab character
+			for (String string : strings) {
+				if(!string.isEmpty()){
+					String[] doctorInfo = string.split(regex);
+					if(doctorInfo[0].equalsIgnoreCase("Doctor")){
+						// we encounter a new doctor
+						blocksTab = new ArrayList<>();
+						spheres = new ArrayList<Sphere>();
+					}
+					else if(doctorInfo[0].equalsIgnoreCase("Speciality")){
+						for (String speciality : doctorInfo) {
+							if(!speciality.equalsIgnoreCase("Speciality")){
+								spheres.add(center.getSphere(speciality));
+							}
+						}
+					}
+					else if(doctorInfo[0].equalsIgnoreCase("Day")){
+						blocksTab.add(new ArrayList<Block>());
+					}
+					else if(doctorInfo.length==4 && !doctorInfo[0].equalsIgnoreCase("Speciality")){
+						Block b = new Block(Integer.parseInt(doctorInfo[0]), Integer.parseInt(doctorInfo[2]), Integer.parseInt(doctorInfo[3]), BlockType.get(doctorInfo[1]));
+						blocksTab.get(blocksTab.size()-1).add(b);
+					}
+				}
+				else{
+					doctors.add(new Doctor(blocksTab, spheres));
+				}
+			}
+		} catch (IOException x) {
+		    System.err.format("IOException: %s%n", x);
+		}
+		return doctors;
+	}
+	
 	public boolean canTreat(Patient patient) {
 		for (Sphere sphere : spheres) {
 			if (sphere.getCancer() == patient.getCancer()) {
@@ -106,6 +164,18 @@ public class Doctor implements ISchedule {
 
 	public int decidesNbTreatments(Patient patient) {
 		int nbTreatments = (int) ((int) 8 + (genDoctorUnif.nextDouble() * (40 - 8)));
+		return nbTreatments;
+	}
+	
+	public int decidesNbTreatments2(Patient patient){
+		int nbTreatments=-1;
+		double rnd = genDoctorUnif.nextDouble();
+		for (int[] tab : patient.getCancer().getNbTreatments()) {
+			if(rnd<tab[0]){
+				nbTreatments=tab[1];
+				break;
+			}
+		}
 		return nbTreatments;
 	}
 

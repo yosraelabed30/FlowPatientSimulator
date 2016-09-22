@@ -1,4 +1,10 @@
-0	poumon	15
-1	coeur	10
-2	cerveau	5
-3	sein	70
+0	digestif	6
+1	peau	2
+2	urathelial	13
+3	snc	6
+4	pulmonaire	9
+5	lymphome	3
+6	orl	10
+7	sein	19
+8	gynecologie	5
+9	metastase	27

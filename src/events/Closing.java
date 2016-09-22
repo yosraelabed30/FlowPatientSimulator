@@ -40,8 +40,6 @@ public class Closing extends Event{
 
 	public void actions() {
 		getCenter().setWelcome(false);
-		int delay = this.getCenter().getClosingTime()-this.getCenter().getOpeningTime();
-		new Opening(this.getCenter()).schedule(delay);
 
 		getCenter().getAdminAgent().processDemands();
 		for (ChefSphere chef : getCenter().getChefsSphere()) {

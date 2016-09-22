@@ -27,7 +27,7 @@ public class Consultation extends ActivityEvent{
 			TreatmentTechnic technic = doctor.decidesTechnic(patient);
 			patient.setTreatmentTechnic(technic);
 			//the number of treatments is fixed during the consultation 
-			int nbTreatments = doctor.decidesNbTreatments(patient);
+			int nbTreatments = doctor.decidesNbTreatments2(patient);
 			patient.setNbTreatments(nbTreatments);
 			getPatient().getDoctor().getSchedule().doNextTask();
 			new PostConsultation(this.getPatient()).schedule(delay);

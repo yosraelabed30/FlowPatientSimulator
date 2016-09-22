@@ -13,6 +13,7 @@ public class PreConsultation extends ActivityEvent{
 		super();
 		this.patient=patient;
 		this.setAdminAgent(adminAgent);
+		this.priority=1;
 	}
 
 	@Override

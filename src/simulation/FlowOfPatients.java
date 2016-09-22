@@ -22,6 +22,7 @@ import events.ActivityEvent;
 import events.ArrivalTreatment;
 import events.CalculDosi;
 import events.Contouring;
+import events.DayEvent;
 import events.Opening;
 import events.PreConsultation;
 import events.ReferredPatient;
@@ -33,6 +34,7 @@ import scheduling.ActivityType;
 import scheduling.Block;
 import scheduling.BlockType;
 import scheduling.Date;
+import umontreal.iro.lecuyer.charts.HistogramChart;
 import umontreal.iro.lecuyer.randvar.ExponentialGen;
 import umontreal.iro.lecuyer.randvar.RandomVariateGen;
 import umontreal.iro.lecuyer.rng.MRG32k3a;
@@ -70,12 +72,15 @@ public class FlowOfPatients {
 	 */
 	public static void main(String[] args) {
 		Cancer.cancersFileReader();
+		Cancer.distNbTreatmentsFileReader();
+		Center center = Center.centerFileReader();
+		ArrayList<Doctor> doctors = Doctor.doctorsFileReader(center);
 		double time = System.currentTimeMillis();
 		FlowOfPatients test = new FlowOfPatients();
 		test.setCenter(test.CHUM());
-		test.simulateOneRun(525600*2);
+//		test.simulateOneRun(525600*2);
 //		test.simulateOneRun(525600);
-//		test.simulateOneRun(288000);
+		test.simulateOneRun(288000);
 //		test.simulateOneRun(100000);
 //		test.simulateOneRun(30000);
 //		test.simulateOneRun(72*60);
@@ -95,6 +100,9 @@ public class FlowOfPatients {
 		System.out.println(test.getCenter().getPatients().statSojourn().report());
 		System.out.println("Statistics, nb of patients for planif : "+Statistics.getNbPatientsForPlanif()+", planned on time : "+Statistics.getPlannedOnTime()+", and late : "+Statistics.getPlannedLate());
 		System.out.println("running time : "+time);
+//		Statistics.displayHistograms();
+//		Statistics.displayCharts();
+//		Statistics.cumulatedRepartitionDelays();
 	}
 
 	/**
@@ -104,7 +112,8 @@ public class FlowOfPatients {
 	public void simulateOneRun(double timeHorizon) {
 		Sim.init();
 		new EndOfSim().schedule(timeHorizon);
-		new Opening(this.getCenter()).schedule(this.getCenter().getOpeningTime());
+		new DayEvent(this.getCenter()).schedule(0);
+//		new Opening(this.getCenter()).schedule(this.getCenter().getOpeningTime());
 		Sim.start();
 	}
 	

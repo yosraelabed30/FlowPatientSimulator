@@ -27,12 +27,20 @@ public abstract class Time {
 		return time/(24*60*7);
 	}
 	
-	public static int dayCorrespondingToTime(int time){
+	public static int toNbOfDays(int time){
 		return time/(24*60);
 	}
 	
+	public static int today(){
+		return toNbOfDays(now());
+	}
+	
+	public static double toDoubleNbOfDays(int time){
+		return time/(24.*60.);
+	}
+	
 	public static int weekDayCorrespondingToTime(int time){
-		return dayCorrespondingToTime(time)%7;
+		return toNbOfDays(time)%7;
 	}
 	
 	public static int fromIdToWeekDay(int dayNb){
