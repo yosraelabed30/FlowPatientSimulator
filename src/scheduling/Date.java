@@ -189,4 +189,12 @@ public class Date implements Comparable<Date>{
 		this.setWeekId(date.getWeekId());
 		this.setMinute(date.getMinute());
 	}
+	
+	/**
+	 * 
+	 * @return the number of days between the two dates
+	 */
+	public Date difference(Date date){
+		return Date.toDates(Math.abs(this.toMinutes()-date.toMinutes()));
+	}
 }

@@ -1,5 +1,11 @@
 package medical;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.nio.charset.Charset;
+import java.nio.file.FileSystems;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -7,12 +13,14 @@ import java.util.LinkedList;
 import tools.Time;
 import umontreal.iro.lecuyer.simevents.LinkedListStat;
 import umontreal.iro.lecuyer.simevents.Sim;
+import umontreal.iro.lecuyer.util.TextDataReader;
 /**
  * Radiotherapy center
  * @author Joffrey
  *
  */
 public class Center {
+	private String name;
 	private int centerId;
 	/**
 	 * Is true when the center is opened and can welcome patients, is false otherwise.
@@ -21,11 +29,11 @@ public class Center {
 	/**
 	 * Time in minutes when the center opens everyday
 	 */
-	private int openingTime = 7*60+30;
+	private int openingTime = 8*60;
 	/**
 	 * Time in minutes when the center closes everyday
 	 */
-	private int closingTime = 30+21 * 60;
+	private int closingTime = 18*60;
 	/**
 	 * Doctors in the center, can be also accessed via there respective spheres.
 	 */
@@ -66,6 +74,7 @@ public class Center {
 	
 	public Center(){
 		super();
+		this.name="NoName";
 		this.welcome = false;
 		this.doctors = new ArrayList<>();
 		this.patients = new LinkedListStat<>();
@@ -79,6 +88,58 @@ public class Center {
 		patients.statSojourn().setName("Radiotherapy waiting time");
 	}
 
+	public Center(String name, int openingTime, int closingTime, ArrayList<Sphere> spheres){
+		super();
+		this.name=name;
+		this.welcome = false;
+		this.doctors = new ArrayList<>();
+		this.patients = new LinkedListStat<>();
+		this.patientsOut = new LinkedList<>();
+		this.scans = new ArrayList<>();
+		this.treatmentMachines = new ArrayList<>();
+		this.spheres = spheres;
+		this.dosimetrists = new ArrayList<>();
+		patients.setStatCollecting(true);
+		patients.statSize().setName("Size of queue of patients in the center");
+		patients.statSojourn().setName("Radiotherapy waiting time");
+		this.openingTime=openingTime;
+		this.closingTime=closingTime;
+	}
+	
+	public static Center centerFileReader(){
+		String[] strings = null;
+		Path path = FileSystems.getDefault().getPath("Center.txt");
+		Charset charset = Charset.forName("US-ASCII");
+		Center center =new Center();
+		int lineCt = 0;
+		
+		try (BufferedReader reader = Files.newBufferedReader(path, charset)) {
+			strings = TextDataReader.readStringData(reader);
+			for (String string : strings) {
+				if(lineCt==0){
+					center.setName(string);
+				}
+				else if(lineCt==1){
+					String regex="\t"; //regex for the tab character
+					String[] cancerInfo = string.split(regex);
+					center.setOpeningTime(Integer.parseInt(cancerInfo[0]));
+					center.setClosingTime(Integer.parseInt(cancerInfo[1]));
+				}
+				else if(lineCt>=3){
+					Cancer cancer = Cancer.get(string);
+					Sphere sphere = new Sphere(center, cancer, null, new ArrayList<Doctor>(), new ArrayList<Patient>());
+					ChefSphere chef = new ChefSphere(sphere);
+					sphere.setChefSphere(chef);
+					center.getSpheres().add(sphere);
+				}
+				lineCt++;
+			}
+		} catch (IOException x) {
+		    System.err.format("IOException: %s%n", x);
+		}
+		return center;
+	}
+	
 	/*
 	 * Getters and setters
 	 */
@@ -268,5 +329,22 @@ public class Center {
 			chefs.add(sphere.getChefSphere());
 		}
 		return chefs;
+	}
+
+	public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
+	}
+
+	public Sphere getSphere(String speciality) {
+		for (Sphere sphere : spheres) {
+			if(sphere.getCancer().getName().equalsIgnoreCase(speciality)){
+				return sphere;
+			}
+		}
+		return null;
 	}
 }

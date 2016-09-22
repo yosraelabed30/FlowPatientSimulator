@@ -26,7 +26,7 @@ public class Week implements Comparable<Week>{
 	 * Quotas of allowed consultations for an oncologist for this week
 	 * TODO change that to 3 for a realistic value (but right now we have more patient referred than in reality)
 	 */
-	private int quotas=160;
+	private int quotas=16;
 	
 	public Week(Schedule schedule, int weekId, Day[] days) {
 		

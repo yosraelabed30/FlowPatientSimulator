@@ -146,8 +146,7 @@ public class Schedule {
 					if (activity.getStatus() == ActivityStatus.NotDone
 							&& activity.getActivityEvent().time() == -10) {
 						if (activity.getActivityEvent().getLateness() != Integer.MAX_VALUE) {
-							delay = Math.max(0, activity.getStart() - min)
-									+ activity.getActivityEvent().getLateness();
+							delay = Math.max(0, activity.getStart()+ activity.getActivityEvent().getLateness() - min);
 							activity.getActivityEvent().schedule(delay);
 							break searchNext;
 						} else {

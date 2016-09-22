@@ -1,0 +1,41 @@
+\documentclass[12pt]{article}
+
+\usepackage{tikz}
+\usetikzlibrary{plotmarks}
+\begin{document}
+
+% PGF/TikZ picture from SSJ: Cumulated delays
+% XScale = 100.0,  YScale = 100.0,  XShift = 0.0,  YShift = 0.0
+% Therefore, thisFileXValue = (originalSeriesXValue+XShift)*XScale
+%        and thisFileYValue = (originalSeriesYValue+YShift)*YScale
+
+\begin{figure}
+\begin{center}
+\begin{tikzpicture}[x=0.011904761904761904cm, y=0.04545454545454545cm]
+\footnotesize
+\draw [-latex] ([xshift=-0mm] 0.0,0) -- ([xshift=3mm] 420.0,0) node[right] {days};
+\draw (0.0,0) -- +(0mm,1mm) -- +(0mm,-1mm) node[below] {0};
+\draw (50.0,0) -- +(0mm,1mm) -- +(0mm,-1mm) node[below] {0.5};
+\draw (100.0,0) -- +(0mm,1mm) -- +(0mm,-1mm) node[below] {1};
+\draw (150.0,0) -- +(0mm,1mm) -- +(0mm,-1mm) node[below] {1.5};
+\draw (200.0,0) -- +(0mm,1mm) -- +(0mm,-1mm) node[below] {2};
+\draw (250.0,0) -- +(0mm,1mm) -- +(0mm,-1mm) node[below] {2.5};
+\draw (300.0,0) -- +(0mm,1mm) -- +(0mm,-1mm) node[below] {3};
+\draw (350.0,0) -- +(0mm,1mm) -- +(0mm,-1mm) node[below] {3.5};
+\draw (400.0,0) -- +(0mm,1mm) -- +(0mm,-1mm) node[below] {4};
+\draw [-latex] ([yshift=-0mm] 0,0.0) -- ([yshift=3mm] 0, 110.00000000000001) node[above] {cumulated % of delays};
+\draw (0,0.0) -- +(1mm,0mm) -- +(-1mm,0mm) node[left] {0};
+\draw (0,50.0) -- +(1mm,0mm) -- +(-1mm,0mm) node[left] {0.5};
+\draw (0,100.0) -- +(1mm,0mm) -- +(-1mm,0mm) node[left] {1};
+\draw [smooth, color=red, mark=*, style=solid] plot coordinates {%
+(0.00,7.8700) %   (0.000000,  0.078700)
+(100.00,68.8623) %   (1.000000,  0.688623)
+(200.00,68.8623) %   (2.000000,  0.688623)
+(300.00,83.1480) %   (3.000000,  0.831480)
+(400.00,100.0000)} %   (4.000000,  1.000000)
+ node[right] { };
+\end{tikzpicture}
+\end{center}
+\caption{Cumulated delays}
+\end{figure}
+\end{document}
